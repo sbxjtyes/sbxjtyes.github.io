@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="在线开发者工具箱 — 20+ 实用工具，JSON格式化、Base64编解码、正则测试、时间戳转换等，纯浏览器端运行，无需安装。">
+    <meta name="description" content="在线开发者工具箱 — 28 个实用工具，JSON格式化、Base64编解码、正则测试、时间戳转换、假数据生成等，纯浏览器端运行，无需安装。">
     <title>DevToolbox — 在线开发者工具箱</title>
 
     <!-- Google Fonts -->
@@ -71,6 +71,10 @@
                     <span class="nav-icon">⏱</span>
                     <span class="nav-label">Cron 解析</span>
                 </a>
+                <a href="#json-csv" class="nav-item" data-tool="json-csv">
+                    <span class="nav-icon">CSV</span>
+                    <span class="nav-label">JSON ↔ CSV</span>
+                </a>
             </div>
 
             <!-- Category: Encoding / Decoding -->
@@ -96,6 +100,10 @@
                     <span class="nav-icon">0x</span>
                     <span class="nav-label">进制转换</span>
                 </a>
+                <a href="#html-entity" class="nav-item" data-tool="html-entity">
+                    <span class="nav-icon">&lt;&gt;</span>
+                    <span class="nav-label">HTML 转义</span>
+                </a>
             </div>
 
             <!-- Category: Text -->
@@ -109,6 +117,10 @@
                     <span class="nav-icon">⇅</span>
                     <span class="nav-label">去重 / 排序</span>
                 </a>
+                <a href="#case-converter" class="nav-item" data-tool="case-converter">
+                    <span class="nav-icon">Aa</span>
+                    <span class="nav-label">命名转换</span>
+                </a>
             </div>
 
             <!-- Category: Design -->
@@ -121,6 +133,10 @@
                 <a href="#gradient-generator" class="nav-item" data-tool="gradient-generator">
                     <span class="nav-icon">◑</span>
                     <span class="nav-label">渐变生成器</span>
+                </a>
+                <a href="#shadow-generator" class="nav-item" data-tool="shadow-generator">
+                    <span class="nav-icon">▪</span>
+                    <span class="nav-label">阴影生成器</span>
                 </a>
             </div>
 
@@ -148,6 +164,18 @@
                     <span class="nav-icon">🔒</span>
                     <span class="nav-label">密码生成</span>
                 </a>
+                <a href="#uuid-generator" class="nav-item" data-tool="uuid-generator">
+                    <span class="nav-icon">ID</span>
+                    <span class="nav-label">UUID 生成</span>
+                </a>
+                <a href="#fake-data" class="nav-item" data-tool="fake-data">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">假数据生成</span>
+                </a>
+                <a href="#placeholder-img" class="nav-item" data-tool="placeholder-img">
+                    <span class="nav-icon">▨</span>
+                    <span class="nav-label">占位图生成</span>
+                </a>
             </div>
 
             <!-- Category: File -->
@@ -156,6 +184,15 @@
                 <a href="#image-compressor" class="nav-item" data-tool="image-compressor">
                     <span class="nav-icon">🖼</span>
                     <span class="nav-label">图片压缩</span>
+                </a>
+            </div>
+
+            <!-- Category: Other -->
+            <div class="nav-category">
+                <h3 class="nav-category-title">ℹ️ 其他</h3>
+                <a href="#device-info" class="nav-item" data-tool="device-info">
+                    <span class="nav-icon">📱</span>
+                    <span class="nav-label">设备信息</span>
                 </a>
             </div>
         </nav>
@@ -206,6 +243,14 @@
         <div class="tool-page" id="page-qrcode-generator"></div>
         <div class="tool-page" id="page-password-generator"></div>
         <div class="tool-page" id="page-image-compressor"></div>
+        <div class="tool-page" id="page-case-converter"></div>
+        <div class="tool-page" id="page-json-csv"></div>
+        <div class="tool-page" id="page-fake-data"></div>
+        <div class="tool-page" id="page-uuid-generator"></div>
+        <div class="tool-page" id="page-html-entity"></div>
+        <div class="tool-page" id="page-shadow-generator"></div>
+        <div class="tool-page" id="page-placeholder-img"></div>
+        <div class="tool-page" id="page-device-info"></div>
     </main>
 
     <!-- App scripts -->
@@ -231,5 +276,13 @@
     <script src="js/tools/qrcode-generator.js" defer></script>
     <script src="js/tools/password-generator.js" defer></script>
     <script src="js/tools/image-compressor.js" defer></script>
+    <script src="js/tools/case-converter.js" defer></script>
+    <script src="js/tools/json-csv.js" defer></script>
+    <script src="js/tools/fake-data.js" defer></script>
+    <script src="js/tools/uuid-generator.js" defer></script>
+    <script src="js/tools/html-entity.js" defer></script>
+    <script src="js/tools/shadow-generator.js" defer></script>
+    <script src="js/tools/placeholder-img.js" defer></script>
+    <script src="js/tools/device-info.js" defer></script>
 </body>
 </html>
