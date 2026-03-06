@@ -3,286 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="在线开发者工具箱 — 28 个实用工具，JSON格式化、Base64编解码、正则测试、时间戳转换、假数据生成等，纯浏览器端运行，无需安装。">
-    <title>DevToolbox — 在线开发者工具箱</title>
+    <meta name="description" content="智答 — 每日高情商问答训练。职场、社交、亲友、情感、饭局等场景的高情商回答参考，提升见识与情商。">
+    <title>智答 — 每日高情商问答</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Third-party libraries (CDN) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-css.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-html.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff2html/3.4.48/diff2html.min.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/diff2html/3.4.48/diff2html.min.css">
-
-    <!-- App styles -->
+    <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <span class="logo-icon">⚡</span>
-                <span class="logo-text">DevToolbox</span>
-            </div>
-            <button class="sidebar-close" id="sidebarClose" aria-label="关闭菜单">✕</button>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon">🧠</span>智答
         </div>
-
-        <div class="search-box">
-            <input type="text" id="toolSearch" placeholder="搜索工具..." autocomplete="off">
-            <span class="search-icon">🔍</span>
+        <div class="header-right">
+            <div class="streak-badge">
+                <span class="streak-fire">📖</span>
+                <span>已学 <span class="streak-count" id="headerRead">0</span> 题</span>
+            </div>
         </div>
+    </header>
 
-        <nav class="nav-menu" id="navMenu">
-            <!-- Category: Developer Tools -->
-            <div class="nav-category">
-                <h3 class="nav-category-title">🔧 开发者工具</h3>
-                <a href="#json-formatter" class="nav-item" data-tool="json-formatter">
-                    <span class="nav-icon">{ }</span>
-                    <span class="nav-label">JSON 格式化</span>
-                </a>
-                <a href="#regex-tester" class="nav-item" data-tool="regex-tester">
-                    <span class="nav-icon">.*</span>
-                    <span class="nav-label">正则测试</span>
-                </a>
-                <a href="#markdown-preview" class="nav-item" data-tool="markdown-preview">
-                    <span class="nav-icon">M↓</span>
-                    <span class="nav-label">Markdown 预览</span>
-                </a>
-                <a href="#diff-viewer" class="nav-item" data-tool="diff-viewer">
-                    <span class="nav-icon">≠</span>
-                    <span class="nav-label">Diff 对比</span>
-                </a>
-                <a href="#code-formatter" class="nav-item" data-tool="code-formatter">
-                    <span class="nav-icon">⟨⟩</span>
-                    <span class="nav-label">代码格式化</span>
-                </a>
-                <a href="#cron-parser" class="nav-item" data-tool="cron-parser">
-                    <span class="nav-icon">⏱</span>
-                    <span class="nav-label">Cron 解析</span>
-                </a>
-                <a href="#json-csv" class="nav-item" data-tool="json-csv">
-                    <span class="nav-icon">CSV</span>
-                    <span class="nav-label">JSON ↔ CSV</span>
-                </a>
-            </div>
-
-            <!-- Category: Encoding / Decoding -->
-            <div class="nav-category">
-                <h3 class="nav-category-title">🔐 编码 / 加密</h3>
-                <a href="#base64" class="nav-item" data-tool="base64">
-                    <span class="nav-icon">B64</span>
-                    <span class="nav-label">Base64</span>
-                </a>
-                <a href="#url-codec" class="nav-item" data-tool="url-codec">
-                    <span class="nav-icon">%</span>
-                    <span class="nav-label">URL 编解码</span>
-                </a>
-                <a href="#hash-generator" class="nav-item" data-tool="hash-generator">
-                    <span class="nav-icon">#</span>
-                    <span class="nav-label">Hash 生成</span>
-                </a>
-                <a href="#jwt-decoder" class="nav-item" data-tool="jwt-decoder">
-                    <span class="nav-icon">JWT</span>
-                    <span class="nav-label">JWT 解析</span>
-                </a>
-                <a href="#number-base" class="nav-item" data-tool="number-base">
-                    <span class="nav-icon">0x</span>
-                    <span class="nav-label">进制转换</span>
-                </a>
-                <a href="#html-entity" class="nav-item" data-tool="html-entity">
-                    <span class="nav-icon">&lt;&gt;</span>
-                    <span class="nav-label">HTML 转义</span>
-                </a>
-            </div>
-
-            <!-- Category: Text -->
-            <div class="nav-category">
-                <h3 class="nav-category-title">📝 文本处理</h3>
-                <a href="#text-counter" class="nav-item" data-tool="text-counter">
-                    <span class="nav-icon">Aa</span>
-                    <span class="nav-label">字数统计</span>
-                </a>
-                <a href="#text-dedup" class="nav-item" data-tool="text-dedup">
-                    <span class="nav-icon">⇅</span>
-                    <span class="nav-label">去重 / 排序</span>
-                </a>
-                <a href="#case-converter" class="nav-item" data-tool="case-converter">
-                    <span class="nav-icon">Aa</span>
-                    <span class="nav-label">命名转换</span>
-                </a>
-            </div>
-
-            <!-- Category: Design -->
-            <div class="nav-category">
-                <h3 class="nav-category-title">🎨 设计工具</h3>
-                <a href="#color-converter" class="nav-item" data-tool="color-converter">
-                    <span class="nav-icon">🎨</span>
-                    <span class="nav-label">颜色转换</span>
-                </a>
-                <a href="#gradient-generator" class="nav-item" data-tool="gradient-generator">
-                    <span class="nav-icon">◑</span>
-                    <span class="nav-label">渐变生成器</span>
-                </a>
-                <a href="#shadow-generator" class="nav-item" data-tool="shadow-generator">
-                    <span class="nav-icon">▪</span>
-                    <span class="nav-label">阴影生成器</span>
-                </a>
-            </div>
-
-            <!-- Category: Data -->
-            <div class="nav-category">
-                <h3 class="nav-category-title">📊 数据计算</h3>
-                <a href="#timestamp" class="nav-item" data-tool="timestamp">
-                    <span class="nav-icon">⏰</span>
-                    <span class="nav-label">时间戳转换</span>
-                </a>
-                <a href="#unit-converter" class="nav-item" data-tool="unit-converter">
-                    <span class="nav-icon">⇄</span>
-                    <span class="nav-label">单位换算</span>
-                </a>
-            </div>
-
-            <!-- Category: Generators -->
-            <div class="nav-category">
-                <h3 class="nav-category-title">🔑 生成器</h3>
-                <a href="#qrcode-generator" class="nav-item" data-tool="qrcode-generator">
-                    <span class="nav-icon">▣</span>
-                    <span class="nav-label">二维码生成</span>
-                </a>
-                <a href="#password-generator" class="nav-item" data-tool="password-generator">
-                    <span class="nav-icon">🔒</span>
-                    <span class="nav-label">密码生成</span>
-                </a>
-                <a href="#uuid-generator" class="nav-item" data-tool="uuid-generator">
-                    <span class="nav-icon">ID</span>
-                    <span class="nav-label">UUID 生成</span>
-                </a>
-                <a href="#fake-data" class="nav-item" data-tool="fake-data">
-                    <span class="nav-icon">👤</span>
-                    <span class="nav-label">假数据生成</span>
-                </a>
-                <a href="#placeholder-img" class="nav-item" data-tool="placeholder-img">
-                    <span class="nav-icon">▨</span>
-                    <span class="nav-label">占位图生成</span>
-                </a>
-            </div>
-
-            <!-- Category: File -->
-            <div class="nav-category">
-                <h3 class="nav-category-title">📁 文件处理</h3>
-                <a href="#image-compressor" class="nav-item" data-tool="image-compressor">
-                    <span class="nav-icon">🖼</span>
-                    <span class="nav-label">图片压缩</span>
-                </a>
-            </div>
-
-            <!-- Category: Other -->
-            <div class="nav-category">
-                <h3 class="nav-category-title">ℹ️ 其他</h3>
-                <a href="#device-info" class="nav-item" data-tool="device-info">
-                    <span class="nav-icon">📱</span>
-                    <span class="nav-label">设备信息</span>
-                </a>
-            </div>
-        </nav>
-    </aside>
-
-    <!-- Mobile menu toggle -->
-    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="打开菜单">☰</button>
-
-    <!-- Overlay for mobile -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <!-- Category Tabs -->
+    <div class="tabs-wrapper">
+        <div class="tabs" id="tabs">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
 
     <!-- Main Content -->
-    <main class="main-content" id="mainContent">
-        <!-- Home / Welcome page -->
-        <div class="tool-page active" id="page-home">
-            <div class="welcome-container">
-                <div class="welcome-hero">
-                    <h1 class="welcome-title">
-                        <span class="title-gradient">DevToolbox</span>
-                    </h1>
-                    <p class="welcome-subtitle">你的在线开发者工具箱</p>
-                    <p class="welcome-desc">20+ 实用工具，纯浏览器端运行，无需安装，数据不上传服务器</p>
-                </div>
-                <div class="tool-grid" id="toolGrid">
-                    <!-- Filled dynamically by app.js -->
-                </div>
+    <main class="main">
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-number" id="statTotal">0</div>
+                <div class="stat-label">总题数</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="statRead">0</div>
+                <div class="stat-label">已学习</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="statCategories">0</div>
+                <div class="stat-label">类别</div>
             </div>
         </div>
 
-        <!-- Tool pages (dynamically loaded) -->
-        <div class="tool-page" id="page-json-formatter"></div>
-        <div class="tool-page" id="page-regex-tester"></div>
-        <div class="tool-page" id="page-markdown-preview"></div>
-        <div class="tool-page" id="page-diff-viewer"></div>
-        <div class="tool-page" id="page-code-formatter"></div>
-        <div class="tool-page" id="page-cron-parser"></div>
-        <div class="tool-page" id="page-base64"></div>
-        <div class="tool-page" id="page-url-codec"></div>
-        <div class="tool-page" id="page-hash-generator"></div>
-        <div class="tool-page" id="page-jwt-decoder"></div>
-        <div class="tool-page" id="page-number-base"></div>
-        <div class="tool-page" id="page-text-counter"></div>
-        <div class="tool-page" id="page-text-dedup"></div>
-        <div class="tool-page" id="page-color-converter"></div>
-        <div class="tool-page" id="page-gradient-generator"></div>
-        <div class="tool-page" id="page-timestamp"></div>
-        <div class="tool-page" id="page-unit-converter"></div>
-        <div class="tool-page" id="page-qrcode-generator"></div>
-        <div class="tool-page" id="page-password-generator"></div>
-        <div class="tool-page" id="page-image-compressor"></div>
-        <div class="tool-page" id="page-case-converter"></div>
-        <div class="tool-page" id="page-json-csv"></div>
-        <div class="tool-page" id="page-fake-data"></div>
-        <div class="tool-page" id="page-uuid-generator"></div>
-        <div class="tool-page" id="page-html-entity"></div>
-        <div class="tool-page" id="page-shadow-generator"></div>
-        <div class="tool-page" id="page-placeholder-img"></div>
-        <div class="tool-page" id="page-device-info"></div>
+        <!-- Card List -->
+        <div id="cardList">
+            <!-- Rendered by JS -->
+        </div>
     </main>
 
-    <!-- App scripts -->
+    <!-- Footer -->
+    <footer class="footer">
+        <p>💡 每天刷几题，提升情商与见识</p>
+        <p style="margin-top:4px">数据仅供参考，实际场景请灵活应变</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
     <script src="js/app.js"></script>
-    <!-- Tool scripts -->
-    <script src="js/tools/json-formatter.js" defer></script>
-    <script src="js/tools/regex-tester.js" defer></script>
-    <script src="js/tools/markdown-preview.js" defer></script>
-    <script src="js/tools/diff-viewer.js" defer></script>
-    <script src="js/tools/code-formatter.js" defer></script>
-    <script src="js/tools/cron-parser.js" defer></script>
-    <script src="js/tools/base64.js" defer></script>
-    <script src="js/tools/url-codec.js" defer></script>
-    <script src="js/tools/hash-generator.js" defer></script>
-    <script src="js/tools/jwt-decoder.js" defer></script>
-    <script src="js/tools/number-base.js" defer></script>
-    <script src="js/tools/text-counter.js" defer></script>
-    <script src="js/tools/text-dedup.js" defer></script>
-    <script src="js/tools/color-converter.js" defer></script>
-    <script src="js/tools/gradient-generator.js" defer></script>
-    <script src="js/tools/timestamp.js" defer></script>
-    <script src="js/tools/unit-converter.js" defer></script>
-    <script src="js/tools/qrcode-generator.js" defer></script>
-    <script src="js/tools/password-generator.js" defer></script>
-    <script src="js/tools/image-compressor.js" defer></script>
-    <script src="js/tools/case-converter.js" defer></script>
-    <script src="js/tools/json-csv.js" defer></script>
-    <script src="js/tools/fake-data.js" defer></script>
-    <script src="js/tools/uuid-generator.js" defer></script>
-    <script src="js/tools/html-entity.js" defer></script>
-    <script src="js/tools/shadow-generator.js" defer></script>
-    <script src="js/tools/placeholder-img.js" defer></script>
-    <script src="js/tools/device-info.js" defer></script>
+
+    <script>
+        // Sync header read count
+        const observer = new MutationObserver(() => {
+            const el = document.getElementById('statRead');
+            if (el) document.getElementById('headerRead').textContent = el.textContent;
+        });
+        const target = document.getElementById('statRead');
+        if (target) observer.observe(target, { childList: true, characterData: true, subtree: true });
+    </script>
 </body>
 </html>

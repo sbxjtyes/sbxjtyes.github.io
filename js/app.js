@@ -1,195 +1,164 @@
 /**
- * DevToolbox — Core Application Logic
- *
- * Handles hash-based routing, navigation, tool registration,
- * search filtering, and global utility helpers.
+ * 智答 — 主应用逻辑
+ * 分类过滤、卡片渲染、展开/收起、已读统计
  */
+(function () {
+    'use strict';
 
-/* ---- Tool Registry ---- */
-const TOOLS = [
-    // Developer Tools
-    { id: 'json-formatter', name: 'JSON 格式化', icon: '{ }', desc: 'JSON 格式化、压缩、语法验证', category: 'dev' },
-    { id: 'regex-tester', name: '正则测试', icon: '.*', desc: '正则表达式实时匹配测试', category: 'dev' },
-    { id: 'markdown-preview', name: 'Markdown 预览', icon: 'M↓', desc: 'Markdown 编辑器与实时预览', category: 'dev' },
-    { id: 'diff-viewer', name: 'Diff 对比', icon: '≠', desc: '文本逐行差异对比', category: 'dev' },
-    { id: 'code-formatter', name: '代码格式化', icon: '⟨⟩', desc: 'HTML / CSS / JS 代码美化', category: 'dev' },
-    { id: 'cron-parser', name: 'Cron 解析', icon: '⏱', desc: 'Cron 表达式解析与可视化', category: 'dev' },
-    // Encoding
-    { id: 'base64', name: 'Base64', icon: 'B64', desc: 'Base64 编码 / 解码', category: 'encode' },
-    { id: 'url-codec', name: 'URL 编解码', icon: '%', desc: 'URL 编码 / 解码', category: 'encode' },
-    { id: 'hash-generator', name: 'Hash 生成', icon: '#', desc: 'MD5 / SHA1 / SHA256 / SHA512', category: 'encode' },
-    { id: 'jwt-decoder', name: 'JWT 解析', icon: 'JWT', desc: 'JWT Token 解码与验证', category: 'encode' },
-    { id: 'number-base', name: '进制转换', icon: '0x', desc: '二/八/十/十六进制互转', category: 'encode' },
-    // Text
-    { id: 'text-counter', name: '字数统计', icon: 'Aa', desc: '字数、字符数、行数统计', category: 'text' },
-    { id: 'text-dedup', name: '去重 / 排序', icon: '⇅', desc: '文本按行去重与排序', category: 'text' },
-    // Design
-    { id: 'color-converter', name: '颜色转换', icon: '🎨', desc: 'HEX / RGB / HSL 颜色互转', category: 'design' },
-    { id: 'gradient-generator', name: '渐变生成器', icon: '◑', desc: 'CSS 渐变可视化编辑器', category: 'design' },
-    // Data
-    { id: 'timestamp', name: '时间戳转换', icon: '⏰', desc: 'Unix 时间戳与日期互转', category: 'data' },
-    { id: 'unit-converter', name: '单位换算', icon: '⇄', desc: '长度/重量/温度等单位换算', category: 'data' },
-    // Generator
-    { id: 'qrcode-generator', name: '二维码生成', icon: '▣', desc: '文本/URL 生成二维码', category: 'gen' },
-    { id: 'password-generator', name: '密码生成', icon: '🔒', desc: '随机密码生成与强度评估', category: 'gen' },
-    // File
-    { id: 'image-compressor', name: '图片压缩', icon: '🖼', desc: '浏览器端图片压缩', category: 'file' },
-    // New tools
-    { id: 'case-converter', name: '命名转换', icon: 'Aa', desc: 'camelCase/snake_case 等命名互转', category: 'text' },
-    { id: 'json-csv', name: 'JSON ↔ CSV', icon: 'CSV', desc: 'JSON 数组与 CSV 格式互转', category: 'dev' },
-    { id: 'fake-data', name: '假数据生成', icon: '👤', desc: '随机姓名、手机号、邮箱、身份证', category: 'gen' },
-    { id: 'uuid-generator', name: 'UUID 生成', icon: 'ID', desc: 'UUID v4 生成，支持批量', category: 'gen' },
-    { id: 'html-entity', name: 'HTML 转义', icon: '<>', desc: 'HTML 实体编码 / 解码', category: 'encode' },
-    { id: 'shadow-generator', name: '阴影生成器', icon: '▪', desc: 'CSS box-shadow 可视化编辑', category: 'design' },
-    { id: 'placeholder-img', name: '占位图生成', icon: '▨', desc: '生成指定尺寸的占位图片', category: 'gen' },
-    { id: 'device-info', name: '设备信息', icon: '📱', desc: '浏览器、屏幕、网络信息检测', category: 'other' },
-];
+    const CATEGORIES = [
+        { key: 'all', label: '全部', icon: '📋' },
+        { key: '职场', label: '职场', icon: '🏢' },
+        { key: '社交', label: '社交', icon: '👥' },
+        { key: '亲友', label: '亲友', icon: '👨‍👩‍👧' },
+        { key: '情感', label: '情感', icon: '❤️' },
+        { key: '尴尬化解', label: '尴尬化解', icon: '😅' },
+        { key: '饭局', label: '饭局', icon: '🍽️' },
+        { key: '自我提升', label: '自我提升', icon: '🧠' },
+        { key: '校园', label: '校园', icon: '🎓' },
+    ];
 
-/* ---- DOM References ---- */
-const navMenu = document.getElementById('navMenu');
-const toolSearch = document.getElementById('toolSearch');
-const mainContent = document.getElementById('mainContent');
-const toolGrid = document.getElementById('toolGrid');
-const sidebar = document.getElementById('sidebar');
-const sidebarClose = document.getElementById('sidebarClose');
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const STORAGE_KEY = 'zhida_read';
+    let currentCategory = 'all';
+    let displayCount = 8;
 
-/* ---- Build Home Tool Grid ---- */
-function buildToolGrid() {
-    toolGrid.innerHTML = TOOLS.map(tool => `
-        <a href="#${tool.id}" class="tool-card" data-tool="${tool.id}">
-            <div class="tool-card-icon">${tool.icon}</div>
-            <div class="tool-card-title">${tool.name}</div>
-            <div class="tool-card-desc">${tool.desc}</div>
-        </a>
-    `).join('');
-}
-buildToolGrid();
-
-/* ---- Hash Router ---- */
-function navigateTo(toolId) {
-    // Hide all pages
-    document.querySelectorAll('.tool-page').forEach(p => p.classList.remove('active'));
-
-    // Deactivate all nav items
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-    if (!toolId || toolId === 'home') {
-        document.getElementById('page-home').classList.add('active');
-    } else {
-        const page = document.getElementById(`page-${toolId}`);
-        if (page) {
-            page.classList.add('active');
-
-            // Initialize tool if not yet rendered
-            if (!page.dataset.initialized && typeof window[`initTool_${toolId.replace(/-/g, '_')}`] === 'function') {
-                window[`initTool_${toolId.replace(/-/g, '_')}`](page);
-                page.dataset.initialized = 'true';
-            }
+    /* ---- Read tracking ---- */
+    function getRead() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+        catch { return []; }
+    }
+    function markRead(idx) {
+        const read = getRead();
+        if (!read.includes(idx)) {
+            read.push(idx);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(read));
         }
+    }
+    function getReadCount() { return getRead().length; }
 
-        const navItem = document.querySelector(`.nav-item[data-tool="${toolId}"]`);
-        if (navItem) navItem.classList.add('active');
+    /* ---- Render tabs ---- */
+    function renderTabs() {
+        const tabsEl = document.getElementById('tabs');
+        tabsEl.innerHTML = CATEGORIES.map(c =>
+            `<button class="tab${c.key === currentCategory ? ' active' : ''}" data-cat="${c.key}">${c.icon} ${c.label}</button>`
+        ).join('');
+
+        tabsEl.querySelectorAll('.tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentCategory = btn.dataset.cat;
+                displayCount = 8;
+                renderTabs();
+                renderCards();
+            });
+        });
     }
 
-    // Close sidebar on mobile
-    closeSidebar();
-}
+    /* ---- Filter questions ---- */
+    function getFiltered() {
+        if (currentCategory === 'all') return QUESTIONS.map((q, i) => ({ ...q, _idx: i }));
+        return QUESTIONS
+            .map((q, i) => ({ ...q, _idx: i }))
+            .filter(q => q.category === currentCategory);
+    }
 
-function onHashChange() {
-    const hash = location.hash.slice(1) || 'home';
-    navigateTo(hash);
-}
+    /* ---- Render cards ---- */
+    function renderCards() {
+        const container = document.getElementById('cardList');
+        const filtered = getFiltered();
+        const showing = filtered.slice(0, displayCount);
+        const read = getRead();
 
-window.addEventListener('hashchange', onHashChange);
-window.addEventListener('DOMContentLoaded', onHashChange);
-
-/* ---- Search Filter ---- */
-toolSearch.addEventListener('input', () => {
-    const query = toolSearch.value.trim().toLowerCase();
-    document.querySelectorAll('.nav-item').forEach(item => {
-        const label = item.querySelector('.nav-label').textContent.toLowerCase();
-        const toolId = item.dataset.tool;
-        const toolDef = TOOLS.find(t => t.id === toolId);
-        const desc = toolDef ? toolDef.desc.toLowerCase() : '';
-        const match = label.includes(query) || desc.includes(query) || toolId.includes(query);
-        item.classList.toggle('hidden', !match);
-    });
-});
-
-/* ---- Mobile Sidebar ---- */
-function openSidebar() { sidebar.classList.add('open'); sidebarOverlay.classList.add('active'); }
-function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.classList.remove('active'); }
-
-mobileMenuBtn.addEventListener('click', openSidebar);
-sidebarClose.addEventListener('click', closeSidebar);
-sidebarOverlay.addEventListener('click', closeSidebar);
-
-/* ---- Global Helpers ---- */
-
-/**
- * Show a temporary toast message at the bottom-right corner.
- *
- * @param {string} message - Toast message text.
- * @param {number} [duration=2500] - Duration in ms before auto-dismiss.
- */
-function showToast(message, duration = 2500) {
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), duration);
-}
-
-/**
- * Copy text to clipboard and show a toast confirmation.
- *
- * @param {string} text - Text to copy.
- * @param {HTMLElement} [btn] - Optional button element to show "copied" state.
- */
-function copyToClipboard(text, btn) {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('✅ 已复制到剪贴板');
-        if (btn) {
-            btn.textContent = '已复制 ✓';
-            btn.classList.add('copied');
-            setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000);
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🤔</div><p>这个分类暂时没有问题</p></div>`;
+            return;
         }
-    }).catch(() => {
-        showToast('❌ 复制失败，请手动复制');
-    });
-}
 
-/**
- * Escape HTML to prevent XSS when rendering user input.
- *
- * @param {string} str - Raw string.
- * @returns {string} Escaped string safe for innerHTML.
- */
-function escapeHtml(str) {
-    const el = document.createElement('div');
-    el.textContent = str;
-    return el.innerHTML;
-}
+        container.innerHTML = showing.map((q, i) => `
+            <div class="card" data-idx="${q._idx}" style="animation-delay:${i * 0.05}s">
+                <div class="card-header">
+                    <span class="card-category">${getCategoryIcon(q.category)} ${q.category}</span>
+                    <span class="card-number">#${q._idx + 1}</span>
+                    <div class="card-question">${escapeHtml(q.question)}</div>
+                    ${q.scene ? `<div class="card-scene">💬 场景：${escapeHtml(q.scene)}</div>` : ''}
+                </div>
+                <button class="card-toggle" aria-label="展开答案">
+                    <span>查看高情商回答</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="card-answer">
+                    <div class="answer-content">
+                        <div class="answer-section">
+                            <div class="answer-label bad">❌ 低情商回答</div>
+                            <div class="answer-text bad-text">${escapeHtml(q.bad)}</div>
+                        </div>
+                        <div class="answer-section">
+                            <div class="answer-label good">✅ 高情商回答</div>
+                            <div class="answer-text good-text">${escapeHtml(q.good)}</div>
+                            ${q.goodAlt ? `<div class="answer-alt"><strong>备选：</strong>${escapeHtml(q.goodAlt)}</div>` : ''}
+                        </div>
+                        <div class="answer-section">
+                            <div class="answer-label tip">💡 回答思路</div>
+                            <div class="answer-text tip-text">${escapeHtml(q.tip)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
 
-/**
- * Create a standard tool page layout with header, description, and body container.
- *
- * @param {HTMLElement} container - The page container element.
- * @param {string} title - Tool title.
- * @param {string} desc - Tool description.
- * @returns {HTMLElement} The body container for tool-specific content.
- */
-function createToolLayout(container, title, desc) {
-    container.innerHTML = `
-        <div class="tool-header">
-            <h1>${title}</h1>
-            <p>${desc}</p>
-        </div>
-        <div class="tool-body" id="body-${container.id.replace('page-', '')}"></div>
-    `;
-    return container.querySelector('.tool-body');
-}
+        // Load more button
+        if (filtered.length > displayCount) {
+            container.innerHTML += `<button class="load-more" id="loadMore">加载更多（还有 ${filtered.length - displayCount} 题）</button>`;
+            document.getElementById('loadMore').addEventListener('click', () => {
+                displayCount += 8;
+                renderCards();
+            });
+        }
+
+        // Toggle cards
+        container.querySelectorAll('.card-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const card = btn.closest('.card');
+                const wasOpen = card.classList.contains('open');
+                card.classList.toggle('open');
+                btn.querySelector('span:first-child').textContent = wasOpen ? '查看高情商回答' : '收起答案';
+                if (!wasOpen) {
+                    const idx = parseInt(card.dataset.idx);
+                    markRead(idx);
+                    updateStats();
+                }
+            });
+        });
+
+        updateStats();
+    }
+
+    /* ---- Stats ---- */
+    function updateStats() {
+        document.getElementById('statTotal').textContent = QUESTIONS.length;
+        document.getElementById('statRead').textContent = getReadCount();
+        document.getElementById('statCategories').textContent = CATEGORIES.length - 1;
+    }
+
+    /* ---- Helpers ---- */
+    function getCategoryIcon(cat) {
+        const found = CATEGORIES.find(c => c.key === cat);
+        return found ? found.icon : '📋';
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    /* ---- Init ---- */
+    function init() {
+        renderTabs();
+        renderCards();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
