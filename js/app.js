@@ -15,6 +15,8 @@
         { key: '饭局', label: '饭局', icon: '🍽️' },
         { key: '自我提升', label: '自我提升', icon: '🧠' },
         { key: '校园', label: '校园', icon: '🎓' },
+        { key: '脑筋急转弯', label: '脑筋急转弯', icon: '🧩' },
+        { key: '笑话', label: '笑话', icon: '😂' },
     ];
 
     const STORAGE_KEY = 'zhida_read';
@@ -72,8 +74,11 @@
             return;
         }
 
-        container.innerHTML = showing.map((q, i) => `
-            <div class="card" data-idx="${q._idx}" style="animation-delay:${i * 0.05}s">
+        container.innerHTML = showing.map((q, i) => {
+            const type = q.type || 'eq';
+            const toggleLabel = type === 'riddle' ? '查看答案' : type === 'joke' ? '查看笑点' : '查看高情商回答';
+            return `
+            <div class="card" data-idx="${q._idx}" data-type="${type}" style="animation-delay:${i * 0.05}s">
                 <div class="card-header">
                     <span class="card-category">${getCategoryIcon(q.category)} ${q.category}</span>
                     <span class="card-number">#${q._idx + 1}</span>
@@ -81,28 +86,16 @@
                     ${q.scene ? `<div class="card-scene">💬 场景：${escapeHtml(q.scene)}</div>` : ''}
                 </div>
                 <button class="card-toggle" aria-label="展开答案">
-                    <span>查看高情商回答</span>
+                    <span>${toggleLabel}</span>
                     <span class="arrow">▼</span>
                 </button>
                 <div class="card-answer">
                     <div class="answer-content">
-                        <div class="answer-section">
-                            <div class="answer-label bad">❌ 低情商回答</div>
-                            <div class="answer-text bad-text">${escapeHtml(q.bad)}</div>
-                        </div>
-                        <div class="answer-section">
-                            <div class="answer-label good">✅ 高情商回答</div>
-                            <div class="answer-text good-text">${escapeHtml(q.good)}</div>
-                            ${q.goodAlt ? `<div class="answer-alt"><strong>备选：</strong>${escapeHtml(q.goodAlt)}</div>` : ''}
-                        </div>
-                        <div class="answer-section">
-                            <div class="answer-label tip">💡 回答思路</div>
-                            <div class="answer-text tip-text">${escapeHtml(q.tip)}</div>
-                        </div>
+                        ${renderAnswerBody(q, type)}
                     </div>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
 
         // Load more button
         if (filtered.length > displayCount) {
@@ -119,7 +112,9 @@
                 const card = btn.closest('.card');
                 const wasOpen = card.classList.contains('open');
                 card.classList.toggle('open');
-                btn.querySelector('span:first-child').textContent = wasOpen ? '查看高情商回答' : '收起答案';
+                const type = card.dataset.type || 'eq';
+                const label = type === 'riddle' ? '查看答案' : type === 'joke' ? '查看笑点' : '查看高情商回答';
+                btn.querySelector('span:first-child').textContent = wasOpen ? label : '收起';
                 if (!wasOpen) {
                     const idx = parseInt(card.dataset.idx);
                     markRead(idx);
@@ -145,9 +140,56 @@
     }
 
     function escapeHtml(str) {
+        if (!str) return '';
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    /**
+     * Render answer body based on card type.
+     * @param {object} q - question object
+     * @param {string} type - 'eq' | 'riddle' | 'joke'
+     * @returns {string} HTML string
+     */
+    function renderAnswerBody(q, type) {
+        if (type === 'riddle') {
+            return `
+                <div class="answer-section">
+                    <div class="answer-label good">✅ 答案</div>
+                    <div class="answer-text good-text">${escapeHtml(q.good)}</div>
+                </div>
+                ${q.tip ? `<div class="answer-section">
+                    <div class="answer-label tip">💡 解析</div>
+                    <div class="answer-text tip-text">${escapeHtml(q.tip)}</div>
+                </div>` : ''}`;
+        }
+        if (type === 'joke') {
+            return `
+                <div class="answer-section">
+                    <div class="answer-label good">😂 笑点</div>
+                    <div class="answer-text good-text">${escapeHtml(q.good)}</div>
+                </div>
+                ${q.tip ? `<div class="answer-section">
+                    <div class="answer-label tip">💬 解读</div>
+                    <div class="answer-text tip-text">${escapeHtml(q.tip)}</div>
+                </div>` : ''}`;
+        }
+        // default: eq type
+        return `
+            <div class="answer-section">
+                <div class="answer-label bad">❌ 低情商回答</div>
+                <div class="answer-text bad-text">${escapeHtml(q.bad)}</div>
+            </div>
+            <div class="answer-section">
+                <div class="answer-label good">✅ 高情商回答</div>
+                <div class="answer-text good-text">${escapeHtml(q.good)}</div>
+                ${q.goodAlt ? `<div class="answer-alt"><strong>备选：</strong>${escapeHtml(q.goodAlt)}</div>` : ''}
+            </div>
+            <div class="answer-section">
+                <div class="answer-label tip">💡 回答思路</div>
+                <div class="answer-text tip-text">${escapeHtml(q.tip)}</div>
+            </div>`;
     }
 
     /* ---- Init ---- */
