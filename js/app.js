@@ -118,8 +118,8 @@
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">📭</div>
-                    <p>当前暂无内容</p>
-                    <p>页面内容已清空。</p>
+                    <p>这个分类暂时没有内容</p>
+                    <p>试试切换到其他分类看看。</p>
                 </div>`;
             updateStats();
             return;
