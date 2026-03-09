@@ -5,8 +5,7 @@
 (function () {
     'use strict';
 
-    const CATEGORIES = [
-        { key: 'all', label: '全部', icon: '📋' },
+    const CATEGORY_META = [
         { key: '职场', label: '职场', icon: '🏢' },
         { key: '社交', label: '社交', icon: '👥' },
         { key: '亲友', label: '亲友', icon: '👨‍👩‍👧' },
@@ -16,35 +15,76 @@
         { key: '自我提升', label: '自我提升', icon: '🧠' },
         { key: '校园', label: '校园', icon: '🎓' },
         { key: '脑筋急转弯', label: '脑筋急转弯', icon: '🧩' },
-        { key: '笑话', label: '笑话', icon: '😂' },
+        { key: '笑话', label: '笑话', icon: '😂' }
     ];
 
     const STORAGE_KEY = 'zhida_read';
     let currentCategory = 'all';
     let displayCount = 8;
 
+    function getAvailableCategories() {
+        const keys = [...new Set(QUESTIONS.map((q) => q.category).filter(Boolean))];
+        return [
+            { key: 'all', label: '全部', icon: '📋' },
+            ...keys.map((key) => {
+                const found = CATEGORY_META.find((category) => category.key === key);
+                return found || { key, label: key, icon: '📋' };
+            })
+        ];
+    }
+
     /* ---- Read tracking ---- */
     function getRead() {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-        catch { return []; }
+        try {
+            const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            if (!Array.isArray(raw)) {
+                return [];
+            }
+            return raw.filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < QUESTIONS.length);
+        } catch {
+            return [];
+        }
     }
+
     function markRead(idx) {
+        if (!Number.isInteger(idx) || idx < 0 || idx >= QUESTIONS.length) {
+            return;
+        }
+
         const read = getRead();
         if (!read.includes(idx)) {
             read.push(idx);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(read));
         }
     }
-    function getReadCount() { return getRead().length; }
+
+    function getReadCount() {
+        return getRead().length;
+    }
 
     /* ---- Render tabs ---- */
     function renderTabs() {
         const tabsEl = document.getElementById('tabs');
-        tabsEl.innerHTML = CATEGORIES.map(c =>
-            `<button class="tab${c.key === currentCategory ? ' active' : ''}" data-cat="${c.key}">${c.icon} ${c.label}</button>`
+        const wrapper = document.querySelector('.tabs-wrapper');
+        const categories = getAvailableCategories();
+
+        if (QUESTIONS.length === 0) {
+            wrapper.hidden = true;
+            tabsEl.innerHTML = '';
+            return;
+        }
+
+        wrapper.hidden = false;
+
+        if (!categories.some((category) => category.key === currentCategory)) {
+            currentCategory = 'all';
+        }
+
+        tabsEl.innerHTML = categories.map((category) =>
+            `<button class="tab${category.key === currentCategory ? ' active' : ''}" data-cat="${category.key}">${category.icon} ${category.label}</button>`
         ).join('');
 
-        tabsEl.querySelectorAll('.tab').forEach(btn => {
+        tabsEl.querySelectorAll('.tab').forEach((btn) => {
             btn.addEventListener('click', () => {
                 currentCategory = btn.dataset.cat;
                 displayCount = 8;
@@ -54,36 +94,47 @@
         });
     }
 
-    /* ---- Filter questions ---- */
+    /* ---- Filter content ---- */
     function getFiltered() {
-        if (currentCategory === 'all') return QUESTIONS.map((q, i) => ({ ...q, _idx: i }));
+        if (currentCategory === 'all') {
+            return QUESTIONS.map((item, index) => ({ ...item, _idx: index }));
+        }
+
         return QUESTIONS
-            .map((q, i) => ({ ...q, _idx: i }))
-            .filter(q => q.category === currentCategory);
+            .map((item, index) => ({ ...item, _idx: index }))
+            .filter((item) => item.category === currentCategory);
     }
 
     /* ---- Render cards ---- */
     function renderCards() {
         const container = document.getElementById('cardList');
+        const statsBar = document.querySelector('.stats-bar');
         const filtered = getFiltered();
         const showing = filtered.slice(0, displayCount);
-        const read = getRead();
+
+        statsBar.hidden = QUESTIONS.length === 0;
 
         if (filtered.length === 0) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🤔</div><p>这个分类暂时没有问题</p></div>`;
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>当前暂无内容</p>
+                    <p>页面内容已清空。</p>
+                </div>`;
+            updateStats();
             return;
         }
 
-        container.innerHTML = showing.map((q, i) => {
-            const type = q.type || 'eq';
+        container.innerHTML = showing.map((item, index) => {
+            const type = item.type || 'eq';
             const toggleLabel = type === 'riddle' ? '查看答案' : type === 'joke' ? '查看笑点' : '查看高情商回答';
             return `
-            <div class="card" data-idx="${q._idx}" data-type="${type}" style="animation-delay:${i * 0.05}s">
+            <div class="card" data-idx="${item._idx}" data-type="${type}" style="animation-delay:${index * 0.05}s">
                 <div class="card-header">
-                    <span class="card-category">${getCategoryIcon(q.category)} ${q.category}</span>
-                    <span class="card-number">#${q._idx + 1}</span>
-                    <div class="card-question">${escapeHtml(q.question)}</div>
-                    ${q.scene ? `<div class="card-scene">💬 场景：${escapeHtml(q.scene)}</div>` : ''}
+                    <span class="card-category">${getCategoryIcon(item.category)} ${item.category}</span>
+                    <span class="card-number">#${item._idx + 1}</span>
+                    <div class="card-question">${escapeHtml(item.question)}</div>
+                    ${item.scene ? `<div class="card-scene">💬 场景：${escapeHtml(item.scene)}</div>` : ''}
                 </div>
                 <button class="card-toggle" aria-label="展开答案">
                     <span>${toggleLabel}</span>
@@ -91,23 +142,21 @@
                 </button>
                 <div class="card-answer">
                     <div class="answer-content">
-                        ${renderAnswerBody(q, type)}
+                        ${renderAnswerBody(item, type)}
                     </div>
                 </div>
             </div>`;
         }).join('');
 
-        // Load more button
         if (filtered.length > displayCount) {
-            container.innerHTML += `<button class="load-more" id="loadMore">加载更多（还有 ${filtered.length - displayCount} 题）</button>`;
+            container.innerHTML += `<button class="load-more" id="loadMore">加载更多（还有 ${filtered.length - displayCount} 项）</button>`;
             document.getElementById('loadMore').addEventListener('click', () => {
                 displayCount += 8;
                 renderCards();
             });
         }
 
-        // Toggle cards
-        container.querySelectorAll('.card-toggle').forEach(btn => {
+        container.querySelectorAll('.card-toggle').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const card = btn.closest('.card');
                 const wasOpen = card.classList.contains('open');
@@ -116,7 +165,7 @@
                 const label = type === 'riddle' ? '查看答案' : type === 'joke' ? '查看笑点' : '查看高情商回答';
                 btn.querySelector('span:first-child').textContent = wasOpen ? label : '收起';
                 if (!wasOpen) {
-                    const idx = parseInt(card.dataset.idx);
+                    const idx = parseInt(card.dataset.idx, 10);
                     markRead(idx);
                     updateStats();
                 }
@@ -128,67 +177,65 @@
 
     /* ---- Stats ---- */
     function updateStats() {
+        const categoryCount = new Set(QUESTIONS.map((item) => item.category).filter(Boolean)).size;
         document.getElementById('statTotal').textContent = QUESTIONS.length;
         document.getElementById('statRead').textContent = getReadCount();
-        document.getElementById('statCategories').textContent = CATEGORIES.length - 1;
+        document.getElementById('statCategories').textContent = categoryCount;
     }
 
     /* ---- Helpers ---- */
-    function getCategoryIcon(cat) {
-        const found = CATEGORIES.find(c => c.key === cat);
+    function getCategoryIcon(categoryKey) {
+        const found = CATEGORY_META.find((category) => category.key === categoryKey);
         return found ? found.icon : '📋';
     }
 
     function escapeHtml(str) {
-        if (!str) return '';
+        if (!str) {
+            return '';
+        }
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
     }
 
-    /**
-     * Render answer body based on card type.
-     * @param {object} q - question object
-     * @param {string} type - 'eq' | 'riddle' | 'joke'
-     * @returns {string} HTML string
-     */
-    function renderAnswerBody(q, type) {
+    function renderAnswerBody(item, type) {
         if (type === 'riddle') {
             return `
                 <div class="answer-section">
                     <div class="answer-label good">✅ 答案</div>
-                    <div class="answer-text good-text">${escapeHtml(q.good)}</div>
+                    <div class="answer-text good-text">${escapeHtml(item.good)}</div>
                 </div>
-                ${q.tip ? `<div class="answer-section">
+                ${item.tip ? `<div class="answer-section">
                     <div class="answer-label tip">💡 解析</div>
-                    <div class="answer-text tip-text">${escapeHtml(q.tip)}</div>
+                    <div class="answer-text tip-text">${escapeHtml(item.tip)}</div>
                 </div>` : ''}`;
         }
+
         if (type === 'joke') {
             return `
                 <div class="answer-section">
                     <div class="answer-label good">😂 笑点</div>
-                    <div class="answer-text good-text">${escapeHtml(q.good)}</div>
+                    <div class="answer-text good-text">${escapeHtml(item.good)}</div>
                 </div>
-                ${q.tip ? `<div class="answer-section">
+                ${item.tip ? `<div class="answer-section">
                     <div class="answer-label tip">💬 解读</div>
-                    <div class="answer-text tip-text">${escapeHtml(q.tip)}</div>
+                    <div class="answer-text tip-text">${escapeHtml(item.tip)}</div>
                 </div>` : ''}`;
         }
-        // default: eq type
+
         return `
             <div class="answer-section">
                 <div class="answer-label bad">❌ 低情商回答</div>
-                <div class="answer-text bad-text">${escapeHtml(q.bad)}</div>
+                <div class="answer-text bad-text">${escapeHtml(item.bad)}</div>
             </div>
             <div class="answer-section">
                 <div class="answer-label good">✅ 高情商回答</div>
-                <div class="answer-text good-text">${escapeHtml(q.good)}</div>
-                ${q.goodAlt ? `<div class="answer-alt"><strong>备选：</strong>${escapeHtml(q.goodAlt)}</div>` : ''}
+                <div class="answer-text good-text">${escapeHtml(item.good)}</div>
+                ${item.goodAlt ? `<div class="answer-alt"><strong>备选：</strong>${escapeHtml(item.goodAlt)}</div>` : ''}
             </div>
             <div class="answer-section">
                 <div class="answer-label tip">💡 回答思路</div>
-                <div class="answer-text tip-text">${escapeHtml(q.tip)}</div>
+                <div class="answer-text tip-text">${escapeHtml(item.tip)}</div>
             </div>`;
     }
 

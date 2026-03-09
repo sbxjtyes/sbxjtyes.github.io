@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="智答 — 每日高情商问答训练。职场、社交、亲友、情感、饭局等场景的高情商回答参考，提升见识与情商。">
-    <title>智答 — 每日高情商问答</title>
+    <meta name="description" content="智答，内容整理中。">
+    <title>智答</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,12 +18,11 @@
     <!-- Header -->
     <header class="header">
         <div class="logo">
-            <span class="logo-icon">🧠</span>智答
+            <span class="logo-icon">✨</span>智答
         </div>
         <div class="header-right">
             <div class="streak-badge">
-                <span class="streak-fire">📖</span>
-                <span>已学 <span class="streak-count" id="headerRead">0</span> 题</span>
+                <span>内容整理中</span>
             </div>
         </div>
     </header>
@@ -41,15 +40,15 @@
         <div class="stats-bar">
             <div class="stat">
                 <div class="stat-number" id="statTotal">0</div>
-                <div class="stat-label">总题数</div>
+                <div class="stat-label">总内容</div>
             </div>
             <div class="stat">
                 <div class="stat-number" id="statRead">0</div>
-                <div class="stat-label">已学习</div>
+                <div class="stat-label">已查看</div>
             </div>
             <div class="stat">
                 <div class="stat-number" id="statCategories">0</div>
-                <div class="stat-label">类别</div>
+                <div class="stat-label">分类数</div>
             </div>
         </div>
 
@@ -61,22 +60,12 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>💡 每天刷几题，提升情商与见识</p>
-        <p style="margin-top:4px">数据仅供参考，实际场景请灵活应变</p>
+        <p>当前暂无内容</p>
+        <p style="margin-top:4px">如需重新添加内容，可以继续调整数据源。</p>
     </footer>
 
     <!-- Scripts -->
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
-
-    <script>
-        // Sync header read count
-        const observer = new MutationObserver(() => {
-            const el = document.getElementById('statRead');
-            if (el) document.getElementById('headerRead').textContent = el.textContent;
-        });
-        const target = document.getElementById('statRead');
-        if (target) observer.observe(target, { childList: true, characterData: true, subtree: true });
-    </script>
 </body>
 </html>

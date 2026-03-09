@@ -1,101 +1,68 @@
-# DevToolbox — 在线开发者工具箱
+# 智答 — 每日高情商问答
 
-> ⚡ 20+ 实用工具，纯浏览器端运行，无需安装，数据不上传服务器
+> 一个轻量的静态内容站，聚合职场、社交、亲友、情感等场景下的高情商表达参考，也包含脑筋急转弯和笑话内容。
 
-🔗 **在线访问**: [sbxjtyes.github.io](https://sbxjtyes.github.io)
+🔗 **在线访问**: [sbxjtyes.me](https://sbxjtyes.me)
 
-## ✨ 功能列表
+## 项目简介
 
-### 🔧 开发者工具
-| 工具 | 说明 |
-|------|------|
-| JSON 格式化 | JSON 格式化、压缩、语法验证 |
-| 正则测试 | 正则表达式实时匹配、捕获组显示 |
-| Markdown 预览 | 左右分栏编辑器，实时渲染 |
-| Diff 对比 | 文本逐行差异对比 |
-| 代码格式化 | HTML / CSS / JS 代码美化 |
-| Cron 解析 | Cron 表达式解析，显示执行时间 |
+“智答”是一个纯前端单页网站，打开即可使用，不依赖后端服务或数据库。页面以卡片流的方式展示问题与回答，适合碎片化浏览和日常表达训练。
 
-### 🔐 编码 / 加密
-| 工具 | 说明 |
-|------|------|
-| Base64 | Base64 编码 / 解码 |
-| URL 编解码 | URL 编码 / 解码 |
-| Hash 生成 | MD5 / SHA1 / SHA256 / SHA512 |
-| JWT 解析 | JWT Token 解码与过期检测 |
-| 进制转换 | 二/八/十/十六进制互转 |
+当前站点包含：
 
-### 📝 文本处理
-| 工具 | 说明 |
-|------|------|
-| 字数统计 | 字数、字符数、行数、中英文分计 |
-| 去重 / 排序 | 文本按行去重、排序、打乱 |
+- 62 条高情商问答
+- 15 条脑筋急转弯
+- 15 条笑话
+- 共 92 条内容
 
-### 🎨 设计工具
-| 工具 | 说明 |
-|------|------|
-| 颜色转换 | HEX / RGB / HSL 颜色互转 |
-| 渐变生成器 | CSS 渐变可视化编辑器 |
+## 核心功能
 
-### 📊 数据计算
-| 工具 | 说明 |
-|------|------|
-| 时间戳转换 | Unix 时间戳与日期互转 |
-| 单位换算 | 长度/重量/温度/面积/速度/数据 |
+- 分类浏览：按职场、社交、亲友、情感、饭局、自我提升、校园等分类筛选内容
+- 卡片展开：点击即可查看回答、思路解析或笑点说明
+- 已读统计：展开过的内容会记录到本地 `localStorage`
+- 渐进加载：默认分批展示内容，避免一次性渲染过多卡片
+- 移动端友好：适配手机与桌面浏览器
 
-### 🔑 生成器
-| 工具 | 说明 |
-|------|------|
-| 二维码生成 | 文本/URL 生成可下载二维码 |
-| 密码生成 | 随机密码生成与强度评估 |
+## 页面结构
 
-### 📁 文件处理
-| 工具 | 说明 |
-|------|------|
-| 图片压缩 | 浏览器端图片压缩 |
+- [index.html](./index.html)：页面骨架、头部信息、统计区和脚本入口
+- [css/style.css](./css/style.css)：全站样式、暗色主题和卡片交互效果
+- [js/app.js](./js/app.js)：分类切换、卡片渲染、展开收起、已读统计
+- [js/data.js](./js/data.js)：内容数据源
+- [CNAME](./CNAME)：GitHub Pages 自定义域名配置
 
-## 🛠 技术栈
+## 技术栈
 
-- **前端**: HTML5 + CSS3 + Vanilla JavaScript
-- **架构**: 单页面应用 (SPA)，Hash 路由
-- **样式**: 暗色主题 + 玻璃拟态 (Glassmorphism)
-- **字体**: Inter + JetBrains Mono (Google Fonts)
-- **部署**: GitHub Pages
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- GitHub Pages
 
-### 第三方库 (CDN)
-- [CryptoJS](https://github.com/brix/crypto-js) — 哈希计算
-- [marked](https://github.com/markedjs/marked) — Markdown 渲染
-- [highlight.js](https://github.com/highlightjs/highlight.js) — 代码高亮
-- [js-beautify](https://github.com/beautifier/js-beautify) — 代码格式化
-- [qrcode.js](https://github.com/davidshimjs/qrcodejs) — 二维码生成
-- [Compressor.js](https://github.com/fengyuanchen/compressorjs) — 图片压缩
+项目没有构建步骤，也没有打包工具；代码改动后可直接静态预览和部署。
 
-## 📂 目录结构
-
-```
-├── index.html          # SPA 主入口
-├── css/
-│   └── style.css       # 设计系统 + 组件样式
-├── js/
-│   ├── app.js          # 路由、导航、全局工具方法
-│   └── tools/          # 20 个工具脚本（每个工具一个文件）
-├── CNAME               # 自定义域名配置
-└── README.md           # 本文件
-```
-
-## 🚀 本地开发
+## 运行方式
 
 ```bash
 # 克隆仓库
 git clone https://github.com/sbxjtyes/sbxjtyes.github.io.git
 cd sbxjtyes.github.io
 
-# 启动本地服务器
+# 启动一个本地静态服务器
 npx serve .
 
-# 浏览器打开 http://localhost:3000
+# 浏览器访问
+http://localhost:3000
 ```
 
-## 📝 许可
+如果你本地已有其他静态服务器工具，也可以直接在仓库根目录启动。
 
-MIT License
+## 后续可扩展方向
+
+- 增加搜索与关键词过滤
+- 支持随机抽题、每日推荐
+- 增加收藏、分享和学习进度统计
+- 将内容数据拆分为按分类维护的独立文件
+
+## License
+
+MIT
