@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gmail 临时邮箱 · + 别名</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📮</text></svg>" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📮</span>
+      <span class="brand-name">Gmail TempMail</span>
+      <span class="brand-sub">+ 别名临时邮箱</span>
+    </div>
+    <div class="tagline">用你自己的 Gmail · 无需服务器</div>
+  </header>
+
+  <main class="container">
+    <div id="demoBanner" class="banner hidden">
+      🧪 <strong>演示模式</strong>：还没配置 <code>.env</code>，下面是示例邮件。填好 Gmail 和应用专用密码后会读取你真实收件箱。
+    </div>
+
+    <section class="card address-card">
+      <div class="card-label">你的临时地址 —— 发到这里的邮件都会进 <span id="baseAddr" class="base-addr">你的 Gmail</span></div>
+      <div class="address-row">
+        <input id="address" class="address-input" readonly value="正在生成…" />
+        <button id="copyBtn" class="btn btn-primary" title="复制地址">
+          <span class="btn-icon">📋</span> 复制
+        </button>
+      </div>
+      <div class="controls">
+        <label class="control">
+          标签
+          <input id="tagInput" class="tag-input" placeholder="随便填 / 点随机" maxlength="30" />
+        </label>
+        <button id="changeBtn" class="btn btn-ghost" title="随机换一个标签">🎲 随机标签</button>
+        <span id="copyToast" class="toast">已复制！</span>
+      </div>
+    </section>
+
+    <section class="card inbox-card">
+      <div class="inbox-head">
+        <div class="inbox-title">
+          收件箱
+          <span id="count" class="count-badge">0</span>
+        </div>
+        <div class="inbox-actions">
+          <span id="autoStatus" class="auto-status">
+            <span class="dot"></span> 自动刷新
+          </span>
+          <button id="refreshBtn" class="btn btn-ghost" title="立即刷新">⟳ 刷新</button>
+          <button id="destroyBtn" class="btn btn-danger" title="移到 Gmail 回收站">🗑 清空此标签</button>
+        </div>
+      </div>
+
+      <ul id="messageList" class="message-list">
+        <li class="empty-state">
+          <div class="empty-illustration">📭</div>
+          <div class="empty-title">这个标签还没有邮件</div>
+          <div class="empty-hint">把上面的地址填到需要验证的网站，收到的邮件会自动出现在这里。</div>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div class="modal-subject" id="mSubject"></div>
+        <button id="modalClose" class="icon-btn" title="关闭">✕</button>
+      </div>
+      <div class="modal-meta">
+        <div><span class="meta-key">发件人</span> <span id="mFrom"></span></div>
+        <div><span class="meta-key">收件人</span> <span id="mTo"></span></div>
+        <div><span class="meta-key">时间</span> <span id="mDate"></span></div>
+      </div>
+      <div class="modal-toolbar">
+        <button id="imagesBtn" class="btn btn-ghost hidden">🖼 显示图片</button>
+        <button id="deleteOneBtn" class="btn btn-danger">移到回收站</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="mBodyFrame" class="body-frame" sandbox=""></iframe>
+        <pre id="mBodyText" class="body-text hidden"></pre>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    基于 Gmail 官方 “+” 别名 · 邮件只读展示 · 删除 = 移到 Gmail 回收站（可恢复）
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

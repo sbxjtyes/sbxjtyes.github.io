@@ -1,0 +1,16 @@
+# Secrets — never commit these
+.env
+*.env
+!*.env.example
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Local databases
+*.db
+
+# Node (cf-worker)
+cf-worker/node_modules/
+cf-worker/.wrangler/

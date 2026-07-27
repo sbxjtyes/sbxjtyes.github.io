@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>临时邮箱 · TempMail</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📮</text></svg>" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📮</span>
+      <span class="brand-name">TempMail</span>
+      <span class="brand-sub">临时邮箱</span>
+    </div>
+    <div class="tagline">免注册 · 即用即弃 · 保护隐私</div>
+  </header>
+
+  <main class="container">
+    <section class="card address-card">
+      <div class="card-label">你的临时邮箱地址</div>
+      <div class="address-row">
+        <input id="address" class="address-input" readonly value="正在生成…" />
+        <button id="copyBtn" class="btn btn-primary" title="复制地址">
+          <span class="btn-icon">📋</span> 复制
+        </button>
+      </div>
+      <div class="controls">
+        <label class="control">
+          域名
+          <select id="domainSelect"></select>
+        </label>
+        <label class="control">
+          保留时间
+          <select id="retentionSelect"></select>
+        </label>
+        <button id="changeBtn" class="btn btn-ghost" title="换一个新地址">🔄 换一个</button>
+        <span id="copyToast" class="toast">已复制！</span>
+      </div>
+    </section>
+
+    <section class="card inbox-card">
+      <div class="inbox-head">
+        <div class="inbox-title">
+          收件箱
+          <span id="count" class="count-badge">0</span>
+        </div>
+        <div class="inbox-actions">
+          <span id="autoStatus" class="auto-status">
+            <span class="dot"></span> 自动刷新
+          </span>
+          <button id="refreshBtn" class="btn btn-ghost" title="立即刷新">⟳ 刷新</button>
+          <button id="destroyBtn" class="btn btn-danger" title="删除全部邮件">🗑 销毁所有</button>
+        </div>
+      </div>
+
+      <ul id="messageList" class="message-list">
+        <li class="empty-state">
+          <div class="empty-illustration">📭</div>
+          <div class="empty-title">收件箱为空</div>
+          <div class="empty-hint">把上面的地址填到需要验证的网站，邮件会自动出现在这里。</div>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div class="modal-subject" id="mSubject"></div>
+        <button id="modalClose" class="icon-btn" title="关闭">✕</button>
+      </div>
+      <div class="modal-meta">
+        <div><span class="meta-key">发件人</span> <span id="mFrom"></span></div>
+        <div><span class="meta-key">收件人</span> <span id="mTo"></span></div>
+        <div><span class="meta-key">时间</span> <span id="mDate"></span></div>
+      </div>
+      <div class="modal-toolbar">
+        <button id="imagesBtn" class="btn btn-ghost hidden">🖼 显示图片</button>
+        <button id="deleteOneBtn" class="btn btn-danger">删除此邮件</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="mBodyFrame" class="body-frame" sandbox=""></iframe>
+        <pre id="mBodyText" class="body-text hidden"></pre>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    完全免费 · 数据到期自动销毁 · 默认拦截外部图片与脚本
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

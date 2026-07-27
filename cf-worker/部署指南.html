@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>临时邮箱部署指南 · sbxjtyes.me</title>
+<style>
+  :root {
+    --bg: #f5f7fc; --panel: #ffffff; --panel-2: #f0f2f9; --border: #e2e6f1;
+    --text: #191d30; --muted: #5c6480; --faint: #8a92ad;
+    --primary: #3f6fe0; --primary-weak: #eaf0ff; --primary-bd: #cfdcfb;
+    --ok: #17915f; --ok-weak: #e6f6ef; --ok-bd: #bfe6d3;
+    --warn: #a9761c; --warn-weak: #fbf1dd; --warn-bd: #eed9ac;
+    --danger: #cf3f5c; --danger-weak: #fceef1; --danger-bd: #f2ccd6;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", "Segoe UI Mono", Consolas, Menlo, monospace;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(20,25,50,.04), 0 8px 24px rgba(20,25,50,.06);
+    --maxw: 780px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1220; --panel: #171b2c; --panel-2: #1d2236; --border: #2b3152;
+      --text: #e9ecf8; --muted: #98a0c0; --faint: #6d76a0;
+      --primary: #7ba1ff; --primary-weak: #182449; --primary-bd: #2f3f70;
+      --ok: #37d399; --ok-weak: #10291f; --ok-bd: #1f5340;
+      --warn: #f2b955; --warn-weak: #2c2411; --warn-bd: #5a4a24;
+      --danger: #ff6f85; --danger-weak: #2c141c; --danger-bd: #5c2c38;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f7fc; --panel: #ffffff; --panel-2: #f0f2f9; --border: #e2e6f1;
+    --text: #191d30; --muted: #5c6480; --faint: #8a92ad;
+    --primary: #3f6fe0; --primary-weak: #eaf0ff; --primary-bd: #cfdcfb;
+    --ok: #17915f; --ok-weak: #e6f6ef; --ok-bd: #bfe6d3;
+    --warn: #a9761c; --warn-weak: #fbf1dd; --warn-bd: #eed9ac;
+    --danger: #cf3f5c; --danger-weak: #fceef1; --danger-bd: #f2ccd6;
+    --shadow: 0 1px 2px rgba(20,25,50,.04), 0 8px 24px rgba(20,25,50,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1220; --panel: #171b2c; --panel-2: #1d2236; --border: #2b3152;
+    --text: #e9ecf8; --muted: #98a0c0; --faint: #6d76a0;
+    --primary: #7ba1ff; --primary-weak: #182449; --primary-bd: #2f3f70;
+    --ok: #37d399; --ok-weak: #10291f; --ok-bd: #1f5340;
+    --warn: #f2b955; --warn-weak: #2c2411; --warn-bd: #5a4a24;
+    --danger: #ff6f85; --danger-weak: #2c141c; --danger-bd: #5c2c38;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--font-sans); line-height: 1.7;
+    -webkit-font-smoothing: antialiased; letter-spacing: .01em;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 40px 20px 80px; }
+
+  /* Header */
+  .head { margin-bottom: 28px; }
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 10px;
+  }
+  h1 {
+    font-size: clamp(26px, 4.5vw, 36px); line-height: 1.2; margin: 0 0 12px;
+    font-weight: 800; text-wrap: balance; letter-spacing: -0.01em;
+  }
+  .lede { color: var(--muted); font-size: 16px; margin: 0 0 18px; max-width: 62ch; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    padding: 6px 12px; border-radius: 999px; box-shadow: var(--shadow);
+  }
+
+  /* Overview / flow */
+  .overview {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 22px; margin: 22px 0; box-shadow: var(--shadow);
+  }
+  .overview h2 { font-size: 15px; margin: 0 0 14px; letter-spacing: .01em; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node {
+    font-size: 13px; font-weight: 650; padding: 7px 12px; border-radius: 10px;
+    background: var(--primary-weak); color: var(--primary); border: 1px solid var(--primary-bd);
+    white-space: nowrap;
+  }
+  .flow .arrow { color: var(--faint); font-weight: 700; }
+
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 18px 0 6px; padding: 0; list-style: none; }
+  .legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .key {
+    width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center;
+    font-size: 13px; font-weight: 800; flex-shrink: 0;
+  }
+  .key.click { background: var(--primary-weak); color: var(--primary); border: 1px solid var(--primary-bd); }
+  .key.ok { background: var(--ok-weak); color: var(--ok); border: 1px solid var(--ok-bd); }
+  .key.warn { background: var(--warn-weak); color: var(--warn); border: 1px solid var(--warn-bd); }
+  .key.err { background: var(--danger-weak); color: var(--danger); border: 1px solid var(--danger-bd); }
+
+  /* Steps */
+  .step {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin: 16px 0; box-shadow: var(--shadow); scroll-margin-top: 16px;
+    transition: opacity .2s ease;
+  }
+  .step.done { opacity: .58; }
+  .step-head { display: flex; align-items: flex-start; gap: 14px; }
+  .num {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    background: var(--primary); color: #fff; font-weight: 800; font-size: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+  .step.done .num { background: var(--ok); }
+  .step-title { flex: 1; }
+  .step-title h2 { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 750; text-wrap: balance; }
+  .step-title .where { font-size: 12.5px; color: var(--faint); font-weight: 600; margin-top: 3px; }
+  .check {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    font-size: 12.5px; color: var(--muted); user-select: none; padding-top: 4px;
+  }
+  .check input { width: 17px; height: 17px; accent-color: var(--ok); cursor: pointer; }
+
+  .step-body { margin-top: 14px; }
+  .step-body > :first-child { margin-top: 0; }
+  ol.sub, ul.sub { margin: 0 0 4px; padding-left: 22px; }
+  ol.sub > li, ul.sub > li { margin: 7px 0; }
+  ol.sub { counter-reset: none; }
+  p { margin: 12px 0; }
+  strong { font-weight: 700; }
+  code.inline {
+    font-family: var(--font-mono); font-size: .86em; background: var(--panel-2);
+    border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; white-space: nowrap;
+  }
+  .path { color: var(--primary); font-weight: 650; }
+  a { color: var(--primary); text-decoration: none; border-bottom: 1px solid var(--primary-bd); }
+  a:hover { border-bottom-color: var(--primary); }
+
+  /* Command block */
+  .cmd {
+    position: relative; margin: 14px 0; background: #0d1020; color: #e7ebff;
+    border: 1px solid #262c47; border-radius: 11px; overflow: hidden;
+  }
+  :root[data-theme="light"] .cmd { background: #14182b; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .cmd { background: #14182b; } }
+  .cmd-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 12px; background: rgba(255,255,255,.04); border-bottom: 1px solid #262c47;
+    font-size: 11.5px; color: #99a2c6; letter-spacing: .04em;
+  }
+  .cmd-bar .label { font-weight: 700; text-transform: uppercase; }
+  .copy-btn {
+    font-family: var(--font-sans); font-size: 12px; font-weight: 650; cursor: pointer;
+    background: #222a48; color: #cdd6f6; border: 1px solid #38416a; border-radius: 7px;
+    padding: 3px 10px; transition: background .15s, color .15s;
+  }
+  .copy-btn:hover { background: #2d3760; color: #fff; }
+  .copy-btn.copied { background: var(--ok); color: #04120c; border-color: var(--ok); }
+  .cmd pre {
+    margin: 0; padding: 13px 14px; overflow-x: auto;
+    font-family: var(--font-mono); font-size: 13.5px; line-height: 1.6; color: #e7ebff;
+  }
+  .cmd pre .cmt { color: #7f88b0; }
+
+  /* Callouts */
+  .note { border-radius: 11px; padding: 13px 16px; margin: 14px 0; font-size: 14.5px; border: 1px solid; }
+  .note p { margin: 6px 0; }
+  .note .nh { font-weight: 750; display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+  .note.ok { background: var(--ok-weak); border-color: var(--ok-bd); }
+  .note.ok .nh { color: var(--ok); }
+  .note.warn { background: var(--warn-weak); border-color: var(--warn-bd); }
+  .note.warn .nh { color: var(--warn); }
+  .note.err { background: var(--danger-weak); border-color: var(--danger-bd); }
+  .note.err .nh { color: var(--danger); }
+
+  /* Table */
+  .tablewrap { overflow-x: auto; margin: 14px 0; border: 1px solid var(--border); border-radius: 11px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--panel-2); font-weight: 700; color: var(--muted); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-family: var(--font-mono); font-size: .92em; }
+
+  /* Cheatsheet */
+  .cheat { margin-top: 30px; }
+  .cheat h2 { font-size: 18px; }
+
+  .foot { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--faint); font-size: 13px; }
+
+  @media (max-width: 540px) {
+    .step { padding: 18px 16px; }
+    .check span { display: none; }
+    h1 { font-size: 25px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div class="eyebrow">部署指南 · 第一次也能跟着做</div>
+    <h1>把你的临时邮箱搭到 Cloudflare 上</h1>
+    <p class="lede">用你自己的域名 <strong>sbxjtyes.me</strong> 收信，全程免费、无需服务器、电脑关机也在线。下面 6 步，跟着点、跟着复制就行。每一步都有「怎么确认成功了」。</p>
+    <div class="chips">
+      <span class="chip">⏱ 约 30–40 分钟</span>
+      <span class="chip">🧩 6 个步骤</span>
+      <span class="chip">💳 全部免费额度</span>
+      <span class="chip">🖥 网页操作 + 几条命令</span>
+    </div>
+  </header>
+
+  <section class="overview">
+    <h2>它是怎么跑起来的（一句话）</h2>
+    <div class="flow">
+      <span class="node">别人发信到 *@sbxjtyes.me</span>
+      <span class="arrow">→</span>
+      <span class="node">Cloudflare 代收</span>
+      <span class="arrow">→</span>
+      <span class="node">Worker 存进数据库</span>
+      <span class="arrow">→</span>
+      <span class="node">你的网页收件箱显示</span>
+    </div>
+    <ul class="legend">
+      <li><span class="key click">✋</span> 蓝色 = 在网页里点/操作</li>
+      <li><span class="key ok">✓</span> 绿色 = 这步成功的标志</li>
+      <li><span class="key warn">!</span> 黄色 = 注意别踩坑</li>
+      <li><span class="key err">✕</span> 红色 = 常见错误</li>
+    </ul>
+  </section>
+
+  <div class="note warn">
+    <div class="nh">⚠️ 开始前先看两点</div>
+    <p><strong>1. 有个等待。</strong>第 2 步改完 DNS 后，要等 Cloudflare 把你的域名激活（几分钟到几小时，最长 1–2 天）。等待期间你可以先做 <strong>第 4 步（命令行部署）</strong>，它不依赖域名生效，能省时间。</p>
+    <p><strong>2. 有些操作只能你本人做。</strong>注册账号、改 Namecheap 的 nameserver、命令行里点授权——这些涉及你的账号密码，我没法替你点。代码和命令都给你了，卡住了把报错发我。</p>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="step" id="s1">
+    <div class="step-head">
+      <div class="num">1</div>
+      <div class="step-title">
+        <h2>注册 Cloudflare，把 sbxjtyes.me 加进去</h2>
+        <div class="where">在网页里操作 · dash.cloudflare.com</div>
+      </div>
+      <label class="check"><input type="checkbox" data-step="1"><span>完成</span></label>
+    </div>
+    <div class="step-body">
+      <ol class="sub">
+        <li>打开 <a href="https://dash.cloudflare.com/sign-up" target="_blank" rel="noopener">dash.cloudflare.com/sign-up</a>，用邮箱 + 密码注册，然后去邮箱点验证链接、登录。</li>
+        <li>登录后，点右上角 <code class="inline">+ Add</code> → <strong>Connect a domain</strong>（首页也有 “Add a site” 大按钮）。</li>
+        <li>输入 <code class="inline">sbxjtyes.me</code>，点 Continue。</li>
+        <li>套餐选最下面的 <strong>Free（$0）</strong>，Continue。</li>
+        <li>Cloudflare 会自动扫描你现有的 DNS 记录。<strong>核对下面这几条在不在</strong>（这是你现在的 GitHub Pages 网站，保住它网站才不会挂）。缺了就点 “Add record” 手动补上：</li>
+      </ol>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>类型</th><th>名称</th><th>内容</th><th>代理状态</th></tr></thead>
+          <tbody>
+            <tr><td>A</td><td><code>@</code></td><td><code>185.199.108.153</code></td><td>DNS only（灰云）</td></tr>
+            <tr><td>A</td><td><code>@</code></td><td><code>185.199.109.153</code></td><td>DNS only（灰云）</td></tr>
+            <tr><td>A</td><td><code>@</code></td><td><code>185.199.110.153</code></td><td>DNS only（灰云）</td></tr>
+            <tr><td>A</td><td><code>@</code></td><td><code>185.199.111.153</code></td><td>DNS only（灰云）</td></tr>
+            <tr><td>CNAME</td><td><code>www</code></td><td><code>sbxjtyes.me</code></td><td>DNS only（灰云）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="">点每条记录右边的橙色云朵图标可切成灰色（DNS only），GitHub Pages 用灰云最稳。</p>
+      <div class="note ok">
+        <div class="nh">✓ 这步成功的标志</div>
+        <p>你进入到 “Change your nameservers（更换域名服务器）” 页面，看到 Cloudflare 分给你的<strong>两个地址</strong>，形如 <code class="inline">xxx.ns.cloudflare.com</code>。下一步要用它俩，<strong>先别关这个页面</strong>。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step" id="s2">
+    <div class="step-head">
+      <div class="num">2</div>
+      <div class="step-title">
+        <h2>在 Namecheap 把 nameserver 改成 Cloudflare 的</h2>
+        <div class="where">在网页里操作 · namecheap.com</div>
+      </div>
+      <label class="check"><input type="checkbox" data-step="2"><span>完成</span></label>
+    </div>
+    <div class="step-body">
+      <ol class="sub">
+        <li>登录 <a href="https://www.namecheap.com/" target="_blank" rel="noopener">namecheap.com</a> → 右上账户 → <strong>Domain List</strong>。</li>
+        <li>找到 <code class="inline">sbxjtyes.me</code>，点右边的 <strong>Manage</strong>。</li>
+        <li>往下找到 <strong>NAMESERVERS</strong> 那一栏，把下拉框从 “Namecheap BasicDNS” 改成 <strong>Custom DNS</strong>。</li>
+        <li>出现两个输入框，分别填入第 1 步 Cloudflare 给你的两个地址（一行一个）。</li>
+        <li>点旁边的<strong>绿色对勾 ✓</strong> 保存。</li>
+      </ol>
+      <div class="note err">
+        <div class="nh">✕ 常见错误</div>
+        <p>把两个地址填反没关系，但<strong>别填错字母、别多空格</strong>；<strong>不要保留 Namecheap 原来的那两条</strong>（要整个替换）。</p>
+      </div>
+      <div class="note ok">
+        <div class="nh">✓ 这步成功的标志</div>
+        <p>回到 Cloudflare，那个域名的状态会从 <strong>Pending（待处理）</strong> 变成 <strong>Active（已激活）</strong>。这需要时间——几分钟到几小时，最长 1–2 天。激活后 Cloudflare 会<strong>发邮件</strong>通知你。</p>
+        <p>👉 别干等：现在就可以往下做 <strong>第 4 步</strong>（命令行部署不需要域名生效）。等激活了再回来做第 3、5 步。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step" id="s3">
+    <div class="step-head">
+      <div class="num">3</div>
+      <div class="step-title">
+        <h2>开启 Email Routing（让 Cloudflare 替你收信）</h2>
+        <div class="where">在网页里操作 · 需要域名已 Active</div>
+      </div>
+      <label class="check"><input type="checkbox" data-step="3"><span>完成</span></label>
+    </div>
+    <div class="step-body">
+      <ol class="sub">
+        <li>Cloudflare 仪表盘里点开 <code class="inline">sbxjtyes.me</code>。</li>
+        <li>左侧菜单找到 <strong>Email</strong> → <strong>Email Routing</strong>。</li>
+        <li>点 <strong>Get started / Enable</strong>。它会提示自动添加收信需要的 <strong>MX 记录 + SPF（TXT）</strong>，一路确认即可。</li>
+        <li>（可选）“Destination addresses” 里可以加你的 Gmail 并验证——只有当你想把某些邮件<strong>转发到 Gmail</strong> 时才需要。做临时邮箱走 Worker 的话，<strong>这步可跳过</strong>。</li>
+      </ol>
+      <div class="note warn">
+        <div class="nh">⚠️ 注意</div>
+        <p>开启后，你原来 Namecheap 自带的邮件转发会失效（本来就是要用 Cloudflare 替换它）。这对做临时邮箱没影响。</p>
+      </div>
+      <div class="note ok">
+        <div class="nh">✓ 这步成功的标志</div>
+        <p>Email Routing 页面顶部显示 <strong>Enabled</strong>；在 DNS 记录里能看到几条指向 <code class="inline">route1/2/3.mx.cloudflare.net</code> 的 MX 记录。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step" id="s4">
+    <div class="step-head">
+      <div class="num">4</div>
+      <div class="step-title">
+        <h2>命令行：登录、建数据库、部署</h2>
+        <div class="where">在 PowerShell 里操作 · 可在等域名生效时先做</div>
+      </div>
+      <label class="check"><input type="checkbox" data-step="4"><span>完成</span></label>
+    </div>
+    <div class="step-body">
+      <p><strong>4.0</strong> 打开 PowerShell，进到项目的 <span class="path">cf-worker</span> 目录：</p>
+      <div class="cmd" data-copy='cd "C:\Users\YS\Desktop\A\running\注册机\TemGmailRegister\cf-worker"'>
+        <div class="cmd-bar"><span class="label">PowerShell</span><button class="copy-btn">复制</button></div>
+        <pre>cd "C:\Users\YS\Desktop\A\running\注册机\TemGmailRegister\cf-worker"</pre>
+      </div>
+
+      <p><strong>4.1</strong> 登录 Cloudflare（会弹出浏览器，点 <strong>Allow</strong> 授权，然后回到终端）：</p>
+      <div class="cmd" data-copy="npx wrangler login">
+        <div class="cmd-bar"><span class="label">PowerShell</span><button class="copy-btn">复制</button></div>
+        <pre>npx wrangler login</pre>
+      </div>
+
+      <p><strong>4.2</strong> 创建 D1 数据库。运行后，<strong>复制输出里的那行 <code class="inline">database_id = "..."</code></strong>：</p>
+      <div class="cmd" data-copy="npx wrangler d1 create tempmail">
+        <div class="cmd-bar"><span class="label">PowerShell</span><button class="copy-btn">复制</button></div>
+        <pre>npx wrangler d1 create tempmail</pre>
+      </div>
+
+      <p><strong>4.3</strong> 打开 <span class="path">cf-worker/wrangler.toml</span>，把里面 <code class="inline">PASTE_DATABASE_ID_HERE</code> 换成上一步那个 id，保存。</p>
+      <div class="note warn">
+        <div class="nh">🙋 不想自己改？</div>
+        <p>把 <code class="inline">wrangler d1 create</code> 输出的那行 id 发给我，我直接帮你填进 <code class="inline">wrangler.toml</code>。</p>
+      </div>
+
+      <p><strong>4.4</strong> 建表（在云端数据库里创建存邮件的表）：</p>
+      <div class="cmd" data-copy="npm run db:init">
+        <div class="cmd-bar"><span class="label">PowerShell</span><button class="copy-btn">复制</button></div>
+        <pre>npm run db:init</pre>
+      </div>
+
+      <p><strong>4.5</strong> 部署。第一次会让你<strong>起一个 <code class="inline">*.workers.dev</code> 子域名</strong>（随便起，比如 <code class="inline">ys-temp</code>），确认即可：</p>
+      <div class="cmd" data-copy="npm run deploy">
+        <div class="cmd-bar"><span class="label">PowerShell</span><button class="copy-btn">复制</button></div>
+        <pre>npm run deploy</pre>
+      </div>
+
+      <div class="note err">
+        <div class="nh">✕ 两个最容易踩的坑</div>
+        <p><strong>忘了填 database_id</strong> → 部署报 D1 binding 相关错误。回 4.3 填好。</p>
+        <p><strong>忘了 4.4 建表</strong> → 界面能打开，但一收信/刷新就报 <code class="inline">no such table: messages</code>。补跑 <code class="inline">npm run db:init</code>。</p>
+      </div>
+      <div class="note ok">
+        <div class="nh">✓ 这步成功的标志</div>
+        <p>终端最后显示部署成功，给你一个网址：<code class="inline">https://tempmail.你的子域.workers.dev</code>。打开它，能看到临时邮箱界面（这时还收不到信，因为第 5 步的 catch-all 还没设）。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="step" id="s5">
+    <div class="step-head">
+      <div class="num">5</div>
+      <div class="step-title">
+        <h2>把「收到的所有邮件」接到 Worker</h2>
+        <div class="where">在网页里操作 · Email Routing → Routing rules</div>
+      </div>
+      <label class="check"><input type="checkbox" data-step="5"><span>完成</span></label>
+    </div>
+    <div class="step-body">
+      <ol class="sub">
+        <li>回到 <strong>Email → Email Routing</strong>，点 <strong>Routing rules</strong> 标签。</li>
+        <li>找到 <strong>Catch-all address（通配收件）</strong> 那一行，点 <strong>Edit</strong>。</li>
+        <li>Action（动作）选 <strong>Send to a Worker</strong>，下拉里选你刚部署的 <strong>tempmail</strong>。</li>
+        <li>确保 Catch-all 的开关是<strong>启用（Enabled）</strong>，Save 保存。</li>
+      </ol>
+      <div class="note ok">
+        <div class="nh">✓ 这步成功的标志</div>
+        <p>Catch-all 那行显示 <strong>Active</strong>，动作是 <strong>Send to Worker: tempmail</strong>。至此，任何发往 <code class="inline">任意名字@sbxjtyes.me</code> 的邮件都会进你的收件箱。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 6 -->
+  <section class="step" id="s6">
+    <div class="step-head">
+      <div class="num">6</div>
+      <div class="step-title">
+        <h2>发一封信，验证成功</h2>
+        <div class="where">用任意邮箱测试</div>
+      </div>
+      <label class="check"><input type="checkbox" data-step="6"><span>完成</span></label>
+    </div>
+    <div class="step-body">
+      <ol class="sub">
+        <li>打开你的 <code class="inline">*.workers.dev</code> 网址，记下页面顶部那个 <code class="inline">xxxx@sbxjtyes.me</code> 地址（也可点 “换一个”）。</li>
+        <li>用你的 Gmail 给这个地址<strong>发一封信</strong>（标题正文随便写）。</li>
+        <li>回到网页等几秒（每 5 秒自动刷新），邮件就会出现在收件箱，点开能看正文。外部图片默认拦截，可点 “显示图片”。</li>
+      </ol>
+      <div class="note err">
+        <div class="nh">✕ 没收到？按顺序排查</div>
+        <p>1) 域名在 Cloudflare 是 <strong>Active</strong> 了吗？（第 2 步）</p>
+        <p>2) Email Routing 是 <strong>Enabled</strong> 吗？（第 3 步）</p>
+        <p>3) Catch-all 指到 <strong>tempmail</strong> 了吗？（第 5 步）</p>
+        <p>4) 看 Worker 实时日志：在 <span class="path">cf-worker</span> 里跑下面这条，然后再发一封信，看有没有事件或报错：</p>
+        <div class="cmd" data-copy="npm run tail">
+          <div class="cmd-bar"><span class="label">PowerShell</span><button class="copy-btn">复制</button></div>
+          <pre>npm run tail</pre>
+        </div>
+        <p>5) 确认你发信的地址域名<strong>拼写没错</strong>（sbxjtyes.me）。</p>
+      </div>
+      <div class="note ok">
+        <div class="nh">🎉 成功了</div>
+        <p>收到信、能点开看正文，就全部搞定了。以后随时打开那个网址，用 <code class="inline">@sbxjtyes.me</code> 的地址去各处注册即可。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Optional -->
+  <section class="step" id="opt">
+    <div class="step-head">
+      <div class="num" style="background:var(--faint)">＋</div>
+      <div class="step-title">
+        <h2>之后可选的增强</h2>
+        <div class="where">不做也能正常用</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <ul class="sub">
+        <li><strong>加登录保护（推荐）：</strong>这个网页现在是公开的，任何知道网址的人都能查 <code class="inline">@sbxjtyes.me</code> 的收件箱。想私有，可用 Cloudflare <strong>Zero Trust → Access</strong>（免费）在前面加一层登录。需要的话我帮你配。</li>
+        <li><strong>换个短域名入口：</strong>给 Worker 绑定 <code class="inline">mail.sbxjtyes.me</code>，就不用记 workers.dev 那串。不影响你 apex 上的 GitHub 网站。</li>
+        <li><strong>调保留时长 / 清理频率：</strong>改 <span class="path">wrangler.toml</span> 里的 <code class="inline">[vars]</code> 和 <code class="inline">[triggers] crons</code>，再 <code class="inline">npm run deploy</code>。</li>
+        <li><strong>保留附件：</strong>目前只存正文（text/html），需要下载附件可以再加。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Cheatsheet -->
+  <section class="cheat">
+    <h2>命令小抄</h2>
+    <div class="cmd" data-copy='cd "C:\Users\YS\Desktop\A\running\注册机\TemGmailRegister\cf-worker"
+npx wrangler login
+npx wrangler d1 create tempmail
+# 把输出的 database_id 填进 wrangler.toml，然后：
+npm run db:init
+npm run deploy
+# 排查问题时看实时日志：
+npm run tail'>
+      <div class="cmd-bar"><span class="label">全部命令 · 在 cf-worker 目录</span><button class="copy-btn">复制</button></div>
+      <pre>cd "C:\Users\YS\Desktop\A\running\注册机\TemGmailRegister\cf-worker"
+npx wrangler login
+npx wrangler d1 create tempmail
+<span class="cmt"># 把输出的 database_id 填进 wrangler.toml，然后：</span>
+npm run db:init
+npm run deploy
+<span class="cmt"># 排查问题时看实时日志：</span>
+npm run tail</pre>
+    </div>
+  </section>
+
+  <footer class="foot">
+    卡在任何一步，把当前页面的报错或截图发我，我帮你继续。 · sbxjtyes.me 临时邮箱 · Cloudflare Workers + D1 + Email Routing
+  </footer>
+</div>
+
+<script>
+  // Click-to-copy on command blocks
+  document.querySelectorAll(".cmd").forEach((box) => {
+    const btn = box.querySelector(".copy-btn");
+    if (!btn) return;
+    btn.addEventListener("click", async () => {
+      const text = box.getAttribute("data-copy") || box.querySelector("pre").innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const r = document.createRange();
+        r.selectNodeContents(box.querySelector("pre"));
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        document.execCommand("copy"); sel.removeAllRanges();
+      }
+      const old = btn.textContent;
+      btn.textContent = "已复制 ✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1500);
+    });
+  });
+
+  // Persist step-completion checkboxes
+  document.querySelectorAll('.check input[data-step]').forEach((cb) => {
+    const key = "tmguide_step_" + cb.dataset.step;
+    const section = cb.closest(".step");
+    if (localStorage.getItem(key) === "1") { cb.checked = true; section.classList.add("done"); }
+    cb.addEventListener("change", () => {
+      section.classList.toggle("done", cb.checked);
+      localStorage.setItem(key, cb.checked ? "1" : "0");
+    });
+  });
+</script>
+
+</body>
+</html>

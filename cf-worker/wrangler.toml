@@ -1,0 +1,23 @@
+name = "tempmail"
+main = "src/worker.js"
+compatibility_date = "2024-11-01"
+
+# --- Static assets: the inbox UI in ./public is served for all non-/api paths.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# --- D1 database. Run `wrangler d1 create tempmail` and paste the id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "tempmail"
+database_id = "PASTE_DATABASE_ID_HERE"
+
+# --- Scheduled purge of expired mail (every 15 minutes).
+[triggers]
+crons = ["*/15 * * * *"]
+
+# --- Settings (edit here or in the Cloudflare dashboard).
+[vars]
+TEMPMAIL_DOMAINS = "sbxjtyes.me"
+TEMPMAIL_RETENTION = "60"
