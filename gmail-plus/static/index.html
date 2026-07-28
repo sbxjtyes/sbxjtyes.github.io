@@ -82,11 +82,13 @@
         <button id="deleteOneBtn" class="btn btn-danger">移到回收站</button>
       </div>
       <div class="modal-body">
-        <iframe id="mBodyFrame" class="body-frame" sandbox=""></iframe>
+        <iframe id="mBodyFrame" class="body-frame" sandbox="allow-popups allow-popups-to-escape-sandbox" title="邮件正文"></iframe>
         <pre id="mBodyText" class="body-text hidden"></pre>
       </div>
     </div>
   </div>
+
+  <div id="actionStatus" class="action-status" role="status" aria-live="polite"></div>
 
   <footer class="footer">
     基于 Gmail 官方 “+” 别名 · 邮件只读展示 · 删除 = 移到 Gmail 回收站（可恢复）

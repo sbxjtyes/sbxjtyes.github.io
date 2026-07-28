@@ -158,11 +158,15 @@ class GmailClient:
         uids = data[0].split()
         return uids[-config.MAX_RESULTS:]
 
-    def _fetch(self, imap, uids: List[bytes]) -> List[Tuple[str, int, bytes]]:
+    def _fetch_headers(self, imap, uids: List[bytes]) -> List[Tuple[str, int, bytes]]:
         if not uids:
             return []
         uid_set = b",".join(uids)
-        typ, data = imap.uid("FETCH", uid_set, "(X-GM-MSGID FLAGS BODY.PEEK[])")
+        typ, data = imap.uid(
+            "FETCH",
+            uid_set,
+            "(X-GM-MSGID FLAGS BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])",
+        )
         if typ != "OK" or not data:
             return []
         out = []
@@ -170,12 +174,12 @@ class GmailClient:
             if not isinstance(item, tuple) or len(item) < 2:
                 continue
             meta = item[0].decode("utf-8", "replace")
-            raw = item[1]
+            headers = item[1]
             m = re.search(r"X-GM-MSGID (\d+)", meta)
             msgid = m.group(1) if m else None
             seen = 1 if "\\Seen" in meta else 0
-            if msgid and isinstance(raw, (bytes, bytearray)):
-                out.append((msgid, seen, bytes(raw)))
+            if msgid and isinstance(headers, (bytes, bytearray)):
+                out.append((msgid, seen, bytes(headers)))
         return out
 
     def _uid_for_msgid(self, imap, msgid: str) -> Optional[bytes]:
@@ -190,20 +194,16 @@ class GmailClient:
     def list_for_address(self, address: str) -> List[dict]:
         def op(imap):
             uids = self._search_uids(imap, address)
-            fetched = self._fetch(imap, uids)
             rows = []
-            for msgid, seen, raw in fetched:
-                parsed = self._cache.get(msgid)
-                if parsed is None:
-                    parsed = _parse_raw(raw)
-                    self._cache[msgid] = parsed
+            for msgid, seen, headers in self._fetch_headers(imap, uids):
+                parsed = _parse_raw(headers)
                 rows.append({
                     "id": msgid,
                     "sender": parsed["sender"],
                     "subject": parsed["subject"],
                     "received_at": parsed["received_at"],
                     "seen": seen,
-                    "has_html": 1 if parsed["body_html"] else 0,
+                    "has_html": 0,
                 })
             rows.sort(key=lambda r: r["received_at"], reverse=True)
             return rows

@@ -6,7 +6,9 @@ const state = {
   retention: parseInt(localStorage.getItem("tm_retention") || "60", 10),
   domain: localStorage.getItem("tm_domain") || "",
   pollTimer: null,
+  refreshPromise: null,
   currentMsg: null,
+  openingMessageId: null,
   showImages: false,
 };
 
@@ -36,10 +38,90 @@ function escapeHtml(s) {
   );
 }
 
-async function api(path, opts) {
-  const res = await fetch(path, opts);
-  if (!res.ok) throw new Error(`${res.status}`);
-  return res.status === 204 ? null : res.json();
+async function api(path, opts = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const res = await fetch(path, { ...opts, signal: controller.signal });
+    if (!res.ok) throw new Error(`请求失败（${res.status}）`);
+    return res.status === 204 ? null : res.json();
+  } catch (error) {
+    if (error.name === "AbortError") throw new Error("请求超时，请重试");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function showFeedback(message, type = "success") {
+  const feedback = $("actionStatus");
+  feedback.textContent = message;
+  feedback.className = `action-status show ${type}`;
+  clearTimeout(showFeedback.timer);
+  showFeedback.timer = setTimeout(() => {
+    feedback.className = "action-status";
+  }, 2200);
+}
+
+function setButtonBusy(button, busy, label) {
+  if (busy) {
+    button.dataset.originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.classList.add("is-busy");
+    button.textContent = label;
+    return;
+  }
+  button.disabled = false;
+  button.classList.remove("is-busy");
+  if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
+}
+
+function setInboxStatus(text, isError = false) {
+  $("autoStatus").innerHTML = `<span class="dot${isError ? " error" : ""}"></span> ${text}`;
+}
+
+function prepareEmailHtml(html) {
+  const parsed = new DOMParser().parseFromString(html, "text/html");
+  parsed.querySelectorAll("script, iframe, object, embed").forEach((node) => node.remove());
+  const styles = Array.from(parsed.head.querySelectorAll("style"), (style) => style.cloneNode(true));
+  if (styles.length) parsed.body.prepend(...styles);
+  for (const link of parsed.querySelectorAll("a[href], area[href]")) {
+    const href = link.getAttribute("href").trim();
+    if (!/^(https?:|mailto:)/i.test(href)) {
+      link.removeAttribute("href");
+      continue;
+    }
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+  }
+  return parsed.body.innerHTML;
+}
+
+function linkifyText(text) {
+  const fragment = document.createDocumentFragment();
+  const pattern = /\b(?:https?:\/\/|mailto:|www\.)[^\s<>"']+/gi;
+  let cursor = 0;
+  for (const match of text.matchAll(pattern)) {
+    let url = match[0];
+    let trailing = "";
+    while (/[),.;:!?]$/.test(url)) {
+      trailing = url.slice(-1) + trailing;
+      url = url.slice(0, -1);
+    }
+    fragment.append(document.createTextNode(text.slice(cursor, match.index)));
+    if (url) {
+      const link = document.createElement("a");
+      link.href = /^www\./i.test(url) ? `https://${url}` : url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = url;
+      fragment.append(link);
+    }
+    if (trailing) fragment.append(document.createTextNode(trailing));
+    cursor = match.index + match[0].length;
+  }
+  fragment.append(document.createTextNode(text.slice(cursor)));
+  return fragment;
 }
 
 // ------------------------------------------------------------------ address
@@ -56,18 +138,41 @@ function newAddress(domain) {
 }
 
 // ------------------------------------------------------------------ inbox
-async function refreshInbox() {
+async function refreshInbox({ manual = false, force = false } = {}) {
   if (!state.address) return;
-  let data;
-  try {
-    data = await api(`/api/inbox?address=${encodeURIComponent(state.address)}`);
-  } catch (e) {
-    return;
+  if (state.refreshPromise) {
+    if (!force) {
+      if (manual) showFeedback("正在刷新收件箱");
+      return state.refreshPromise;
+    }
+    await state.refreshPromise;
   }
-  const cutoff = Date.now() / 1000 - state.retention * 60;
-  const msgs = data.messages.filter((m) => m.received_at >= cutoff);
-  renderMessages(msgs);
-  $("count").textContent = msgs.length;
+
+  const address = state.address;
+  const refreshButton = $("refreshBtn");
+  if (manual) setButtonBusy(refreshButton, true, "刷新中...");
+  setInboxStatus("正在刷新...");
+  state.refreshPromise = (async () => {
+    try {
+      const data = await api(`/api/inbox?address=${encodeURIComponent(address)}`);
+      if (address !== state.address) return;
+      const cutoff = Date.now() / 1000 - state.retention * 60;
+      const messages = data.messages.filter((message) => message.received_at >= cutoff);
+      renderMessages(messages);
+      $("count").textContent = messages.length;
+      setInboxStatus("刚刚已更新");
+      if (manual) showFeedback(`收件箱已更新，共 ${messages.length} 封邮件`);
+    } catch (error) {
+      if (address !== state.address) return;
+      setInboxStatus("刷新失败", true);
+      if (manual) showFeedback(error.message || "刷新失败，请重试", "error");
+    } finally {
+      state.refreshPromise = null;
+      if (manual) setButtonBusy(refreshButton, false);
+      if (address !== state.address) refreshInbox();
+    }
+  })();
+  return state.refreshPromise;
 }
 
 function renderMessages(msgs) {
@@ -85,6 +190,7 @@ function renderMessages(msgs) {
   for (const m of msgs) {
     const li = document.createElement("li");
     li.className = "message-item";
+    li.dataset.messageId = m.id;
     li.innerHTML = `
       <span class="msg-unread-dot ${m.seen ? "seen" : ""}"></span>
       <div class="msg-main">
@@ -99,21 +205,28 @@ function renderMessages(msgs) {
 
 // ------------------------------------------------------------------ viewer
 async function openMessage(id) {
-  let msg;
+  if (state.openingMessageId) return;
+  state.openingMessageId = id;
+  const item = document.querySelector(`[data-message-id="${id}"]`);
+  item?.classList.add("is-loading");
+  showFeedback("正在加载邮件内容");
   try {
-    msg = await api(`/api/message/${id}`);
-  } catch (e) {
-    return;
+    const msg = await api(`/api/message/${id}`);
+    state.currentMsg = msg;
+    state.showImages = false;
+    $("mSubject").textContent = msg.subject || "(无主题)";
+    $("mFrom").textContent = msg.sender || "未知";
+    $("mTo").textContent = msg.address || state.address;
+    $("mDate").textContent = new Date(msg.received_at * 1000).toLocaleString();
+    renderBody();
+    $("modal").classList.remove("hidden");
+    refreshInbox();
+  } catch (error) {
+    showFeedback(error.message || "邮件加载失败，请重试", "error");
+  } finally {
+    state.openingMessageId = null;
+    item?.classList.remove("is-loading");
   }
-  state.currentMsg = msg;
-  state.showImages = false;
-  $("mSubject").textContent = msg.subject || "(无主题)";
-  $("mFrom").textContent = msg.sender || "未知";
-  $("mTo").textContent = msg.address || state.address;
-  $("mDate").textContent = new Date(msg.received_at * 1000).toLocaleString();
-  renderBody();
-  $("modal").classList.remove("hidden");
-  refreshInbox();
 }
 
 function renderBody() {
@@ -125,21 +238,21 @@ function renderBody() {
   if (msg.body_html) {
     const imgSrc = state.showImages ? "img-src https: data: cid:;" : "img-src 'none';";
     const csp =
-      `default-src 'none'; style-src 'unsafe-inline'; ${imgSrc} font-src data:;`;
+      `default-src 'none'; style-src 'unsafe-inline'; ${imgSrc} font-src data:; form-action 'none';`;
     const doc = `<!DOCTYPE html><html><head>
       <meta charset="utf-8">
       <meta http-equiv="Content-Security-Policy" content="${csp}">
       <base target="_blank">
       <style>body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
         color:#111;padding:8px;margin:0;line-height:1.6;word-break:break-word;}</style>
-      </head><body>${msg.body_html}</body></html>`;
+      </head><body>${prepareEmailHtml(msg.body_html)}</body></html>`;
     frame.srcdoc = doc;
     frame.classList.remove("hidden");
     textEl.classList.add("hidden");
     imagesBtn.classList.toggle("hidden", state.showImages);
     imagesBtn.textContent = "🖼 显示图片";
   } else {
-    textEl.textContent = msg.body_text || "(空邮件)";
+    textEl.replaceChildren(linkifyText(msg.body_text || "(空邮件)"));
     textEl.classList.remove("hidden");
     frame.classList.add("hidden");
     imagesBtn.classList.add("hidden");
@@ -195,20 +308,42 @@ async function init() {
 
   // buttons
   $("copyBtn").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(state.address); }
-    catch (e) {
-      const el = $("address"); el.select(); document.execCommand("copy");
+    const button = $("copyBtn");
+    setButtonBusy(button, true, "复制中...");
+    try {
+      await navigator.clipboard.writeText(state.address);
+      showFeedback("邮箱地址已复制");
+    } catch (error) {
+      const input = $("address");
+      input.select();
+      try {
+        if (document.execCommand("copy")) showFeedback("邮箱地址已复制");
+        else showFeedback("复制失败，请手动复制", "error");
+      } catch (fallbackError) {
+        showFeedback("复制失败，请手动复制", "error");
+      }
+    } finally {
+      setButtonBusy(button, false);
     }
-    const t = $("copyToast");
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 1200);
   });
-  $("changeBtn").addEventListener("click", () => newAddress());
-  $("refreshBtn").addEventListener("click", refreshInbox);
+  $("changeBtn").addEventListener("click", () => {
+    newAddress();
+    showFeedback("已生成新的临时邮箱地址");
+  });
+  $("refreshBtn").addEventListener("click", () => refreshInbox({ manual: true }));
   $("destroyBtn").addEventListener("click", async () => {
     if (!confirm("确定删除该地址下的所有邮件？")) return;
-    await api(`/api/inbox?address=${encodeURIComponent(state.address)}`, { method: "DELETE" });
-    refreshInbox();
+    const button = $("destroyBtn");
+    setButtonBusy(button, true, "销毁中...");
+    try {
+      const result = await api(`/api/inbox?address=${encodeURIComponent(state.address)}`, { method: "DELETE" });
+      showFeedback(`已销毁 ${result.deleted || 0} 封邮件`);
+      await refreshInbox({ manual: true, force: true });
+    } catch (error) {
+      showFeedback(error.message || "销毁失败，请重试", "error");
+    } finally {
+      setButtonBusy(button, false);
+    }
   });
   $("modalClose").addEventListener("click", closeModal);
   document.querySelector(".modal-backdrop").addEventListener("click", closeModal);

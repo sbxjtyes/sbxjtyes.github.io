@@ -82,11 +82,13 @@
         <button id="deleteOneBtn" class="btn btn-danger">删除此邮件</button>
       </div>
       <div class="modal-body">
-        <iframe id="mBodyFrame" class="body-frame" sandbox=""></iframe>
+        <iframe id="mBodyFrame" class="body-frame" sandbox="allow-popups allow-popups-to-escape-sandbox" title="邮件正文"></iframe>
         <pre id="mBodyText" class="body-text hidden"></pre>
       </div>
     </div>
   </div>
+
+  <div id="actionStatus" class="action-status" role="status" aria-live="polite"></div>
 
   <footer class="footer">
     完全免费 · 数据到期自动销毁 · 默认拦截外部图片与脚本
